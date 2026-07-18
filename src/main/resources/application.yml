@@ -1,0 +1,16 @@
+spring: #sem valor lógico, apenas um agrupador de informações, um organizador
+  application: # tambem um agrupador de informações, um organizador, relacionado a tudo que tem a ver com informações gerais da aplicação
+    name: LocacaoCarro # nome lógico da aplicação, aparecendo em logs do spring por exemplo
+  datasource: # o agrupador de configurações com o banco de dados, sempre dentro de datasource
+    url: jdbc:sqlite:locacaocarro.db # a url do banco de dados.
+      # JDBC: o prefixo obrigatorio em todos.
+      # SQLITE: aponta pro driver que se deve buscar, no caso sqlite, mas cada banco tem o seu, por exemplo, 'postgresql'
+    # a ultima parte é o resto da url, em bancos com servidores locais ou nuvem, é o link do banco, como um host ou localhosto por exemplo
+    driver-class-name: org.sqlite.JDBC # diz ao spring em que classe o driver maneger deve implementar o drive do banco, no caso, o sqlite
+  jpa: # agrupador relacionando tudo que tem a ver com o jpa, inclusive o proprio hibernate. Difirente do datasource, ele diz o comportamento do hibernate com o banco
+    hibernate: # o agrupador especifico do hibernate
+      ddl-auto: update # infere um comportamento em que o hibernate compara o estado atual do banco de dados, e do mapeamento, e se o mapeamento do java estiver "na frente", ele atualiza o banco pegando de referencia o mapeamento
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+    show-sql: true
