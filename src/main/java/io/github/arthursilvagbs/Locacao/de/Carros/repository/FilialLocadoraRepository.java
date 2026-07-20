@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface FilialLocadoraRepository extends JpaRepository<FilialLocadora, UUID> {
+    boolean existsByCnpjFilial(String cnpjFilial);
 }
