@@ -27,10 +27,10 @@ public class PessoaFisicaService {
 
    @Transactional
    public PessoaFisicaResponseDTO criarPessoaFisica(PessoaFisicaCreateDTO dto) {
-      if (!repository.existsByCpf(dto.cpf())) {
+      if (repository.existsByCpf(dto.cpf())) {
          throw new RegistroDuplicadoException("CPF já cadastrado.");
       }
-      if (!repository.existsByEmail(dto.email())){
+      if (repository.existsByEmail(dto.email())){
          throw new RegistroDuplicadoException("Email já cadastrado.");
       }
       PessoaFisica cliente = mapper.mapearParaPessoaFisica(dto);

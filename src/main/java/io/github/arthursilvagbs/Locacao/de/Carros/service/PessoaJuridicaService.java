@@ -26,10 +26,10 @@ public class PessoaJuridicaService {
 
    @Transactional
    public PessoaJuridicaResponseDTO criarPessoaJuridica(PessoaJuridicaCreateDTO dto) {
-      if (!repository.existsByCnpj(dto.cnpj())) {
+      if (repository.existsByCnpj(dto.cnpj())) {
          throw new RegistroDuplicadoException("CNPJ já cadastrado.");
       }
-      if (!repository.existsByEmail(dto.email())) {
+      if (repository.existsByEmail(dto.email())) {
          throw new RegistroDuplicadoException("Email já cadastrado.");
       }
       PessoaJuridica pessoaJuridica = repository.save(mapper.mapearParaPessoaJuridica(dto));
