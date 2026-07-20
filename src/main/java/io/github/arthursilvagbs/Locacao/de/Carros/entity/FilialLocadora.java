@@ -59,6 +59,10 @@ public class FilialLocadora {
     @OneToMany(mappedBy = "filialDevolucao")
     private List<Locacao> locacoesDevolucoes;
 
+    @Setter
+    @OneToMany(mappedBy = "filialAtual")
+    private List<Veiculo> veiculos;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

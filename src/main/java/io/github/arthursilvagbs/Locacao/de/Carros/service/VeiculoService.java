@@ -3,10 +3,12 @@ package io.github.arthursilvagbs.Locacao.de.Carros.service;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.VeiculoMapper;
+import io.github.arthursilvagbs.Locacao.de.Carros.repository.FilialLocadoraRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 @Service
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class VeiculoService {
 
    private final VeiculoRepository repository;
+   private final FilialLocadoraRepository filialLocadoraRepository;
    private final VeiculoMapper mapper;
 
    @Transactional
@@ -37,7 +39,10 @@ public class VeiculoService {
          throw new RegistroDuplicadoException("Número do Renavam já existente no sistema.");
       }
 
-      Veiculo veiculo = mapper.mapearParaVeiculo(dto);
+      FilialLocadora filialLocadora = filialLocadoraRepository.findById(UUID.fromString(dto.filialAtualId()))
+         .orElseThrow(() -> new EntidadeNaoEncontradaException("Filial não encontrada"));
+
+      Veiculo veiculo = mapper.mapearParaVeiculo(dto, filialLocadora);
       repository.save(veiculo);
       return mapper.mapearParaResponse(veiculo);
    }

@@ -65,7 +65,12 @@ public class Veiculo {
 
     @Setter
     @OneToMany(mappedBy = "veiculo")
-    private List<Locacao> locacoes;
+    private List<Locacao> historicoLocacoes;
+
+    @Setter
+    @ManyToOne
+    @JoinColumn(name = "filial_atual", nullable = false)
+    private FilialLocadora filialAtual;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -82,7 +87,8 @@ public class Veiculo {
             LocalDateTime ano,
             String cor,
             CategoriaVeiculo categoriaVeiculo,
-            Integer quilometragem
+            Integer quilometragem,
+            FilialLocadora filialAtual
     ) {
         this.numeroChassi = numeroChassi;
         this.placaVeiculo = placaVeiculo;
@@ -93,5 +99,6 @@ public class Veiculo {
         this.cor = cor;
         this.categoriaVeiculo = categoriaVeiculo;
         this.quilometragem = quilometragem;
+        this.filialAtual = filialAtual;
     }
 }
