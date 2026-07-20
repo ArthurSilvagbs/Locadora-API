@@ -3,6 +3,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record VeiculoCreateDTO(
         String numeroChassi,
@@ -13,6 +14,7 @@ public record VeiculoCreateDTO(
         LocalDateTime ano,
         String cor,
         CategoriaVeiculo categoriaVeiculo,
-        Integer quilometragem
+        Integer quilometragem,
+        String filialAtualId
 ) {
 }

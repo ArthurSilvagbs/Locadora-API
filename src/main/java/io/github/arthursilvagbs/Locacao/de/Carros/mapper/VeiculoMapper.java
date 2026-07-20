@@ -2,6 +2,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.mapper;
 
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +11,7 @@ import java.util.Locale;
 @Component
 public class VeiculoMapper {
 
-    public Veiculo mapearParaVeiculo(VeiculoCreateDTO dto) {
+    public Veiculo mapearParaVeiculo(VeiculoCreateDTO dto, FilialLocadora filialLocadora) {
         return new Veiculo(
                 dto.numeroChassi(),
                 dto.placaVeiculo(),
@@ -20,7 +21,8 @@ public class VeiculoMapper {
                 dto.ano(),
                 dto.cor(),
                 dto.categoriaVeiculo(),
-                dto.quilometragem()
+                dto.quilometragem(),
+                filialLocadora
         );
     }
 
