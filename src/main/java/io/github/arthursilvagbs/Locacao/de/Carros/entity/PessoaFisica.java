@@ -15,7 +15,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 public class PessoaFisica extends Cliente{
 
     @Column(nullable = false, unique = true, length = 14)

@@ -19,7 +19,6 @@ public record VeiculoResponseDTO(
         String cor,
         CategoriaVeiculo categoriaVeiculo,
         Integer quilometragem,
-        List<Manutencao> manutencoes,
-        List<Locacao> locacoes
+        LocalDateTime createdAt
 ) {
 }
