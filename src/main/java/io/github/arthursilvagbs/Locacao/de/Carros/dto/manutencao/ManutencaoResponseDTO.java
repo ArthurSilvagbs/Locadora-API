@@ -11,7 +11,7 @@ public record ManutencaoResponseDTO(
         Veiculo veiculo,
         LocalDateTime dataManutencao,
         String descricao,
-        int quilometragemVeiculo,
+        Integer quilometragemVeiculo,
         BigDecimal valor
 ) {
 }

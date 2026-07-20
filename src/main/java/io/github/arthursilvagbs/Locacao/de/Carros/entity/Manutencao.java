@@ -38,7 +38,7 @@ public class Manutencao {
 
     @Setter
     @Column(precision = 7, scale = 1)
-    private int quilimetragemVeiculo;
+    private Integer quilimetragemVeiculo;
 
     @Setter
     @Column(precision = 7, scale = 2, nullable = false)

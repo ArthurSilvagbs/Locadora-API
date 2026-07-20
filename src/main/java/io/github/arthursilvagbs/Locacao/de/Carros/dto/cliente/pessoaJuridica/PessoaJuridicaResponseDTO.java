@@ -1,8 +1,6 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica;
 
-import io.github.arthursilvagbs.Locacao.de.Carros.entity.Locacao;
-
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record PessoaJuridicaResponseDTO(
@@ -12,6 +10,6 @@ public record PessoaJuridicaResponseDTO(
         String telefone,
         String endereco,
         String cnpj,
-        List<Locacao> locacoes
+        LocalDateTime createdAt
 ) {
 }
