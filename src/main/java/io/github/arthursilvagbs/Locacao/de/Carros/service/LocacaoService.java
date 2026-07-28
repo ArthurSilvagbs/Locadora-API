@@ -1,6 +1,5 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
-import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.LocacaoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.LocacaoRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
