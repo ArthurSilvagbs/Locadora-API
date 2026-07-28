@@ -17,7 +17,4 @@ public class LocacaoService {
    private final VeiculoRepository veiculoRepository;
    private final VeiculoService veiculoService;
 
-   private BigDecimal calcularValorLocacao(String ) {
-
-   }
 }
