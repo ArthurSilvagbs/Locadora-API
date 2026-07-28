@@ -55,6 +55,14 @@ public class Locacao {
     private StatusLocacao statusLocacao;
 
     @Setter
+    @Column(name = "km_retirada", precision = 2)
+    private Double kmRetirada;
+
+    @Setter
+    @Column(name = "km_devolucao", precision = 2)
+    private Double kmDevolucao;
+
+    @Setter
     @Column(nullable = false)
     private LocalDateTime dataRetirada;
 

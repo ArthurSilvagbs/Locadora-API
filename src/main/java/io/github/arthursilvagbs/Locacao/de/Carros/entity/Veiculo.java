@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -71,6 +72,14 @@ public class Veiculo {
     @ManyToOne
     @JoinColumn(name = "filial_atual", nullable = false)
     private FilialLocadora filialAtual;
+
+    @Setter
+    @Enumerated(EnumType.STRING)
+    private StatusVeiculo statusVeiculo;
+
+    @Setter
+    @Column(precision = 6, scale = 2)
+    private BigDecimal valorDiaria;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
