@@ -76,7 +76,6 @@ public class Locacao {
     public Locacao(
             Cliente cliente,
             Veiculo veiculo,
-            BigDecimal valorLocacao,
             FilialLocadora filialRetirada,
             FilialLocadora filialDevolucao,
             FormaPagamento formaPagamento,
@@ -85,7 +84,6 @@ public class Locacao {
     ) {
         this.cliente = cliente;
         this.veiculo = veiculo;
-        this.valorLocacao = valorLocacao;
         this.filialRetirada = filialRetirada;
         this.filialDevolucao = filialDevolucao;
         this.formaPagamento = formaPagamento;

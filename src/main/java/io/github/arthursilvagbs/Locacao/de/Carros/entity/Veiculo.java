@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo.DISPONIVEL;
+
 @Entity
 @Table(name = "veiculo")
 @NoArgsConstructor
@@ -107,6 +109,7 @@ public class Veiculo {
         this.ano = ano;
         this.cor = cor;
         this.categoriaVeiculo = categoriaVeiculo;
+        this.statusVeiculo = StatusVeiculo.DISPONIVEL;
         this.quilometragem = quilometragem;
         this.filialAtual = filialAtual;
     }
