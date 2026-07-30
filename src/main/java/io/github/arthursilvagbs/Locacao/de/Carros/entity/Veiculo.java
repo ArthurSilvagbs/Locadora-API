@@ -60,7 +60,7 @@ public class Veiculo {
 
     @Setter
     @Column(precision = 7, scale = 1, nullable = false)
-    private Integer quilometragem;
+    private Double quilometragem;
 
     @Setter
     @OneToMany(mappedBy = "veiculo")
