@@ -31,8 +31,8 @@ public class ManutencaoService {
 
    @Transactional
    public ManutencaoResponseDTO criarManutencao(ManutencaoCreateDTO dto, String veiculoId) {
-      Veiculo veiculo = repository.findById(UUID.fromString(veiculoId))
-              .orElseThrow(() -> new EntidadeNaoEncontradaException("Veículo não encontrado.")).getVeiculo();
+      Veiculo veiculo = veiculoRepository.findById(UUID.fromString(veiculoId))
+              .orElseThrow(() -> new EntidadeNaoEncontradaException("Veículo não encontrado."));
       Manutencao manutencao = mapper.mapearParaManutencao(dto, veiculo);
       Veiculo veiculoManutencao = manutencao.getVeiculo();
 
