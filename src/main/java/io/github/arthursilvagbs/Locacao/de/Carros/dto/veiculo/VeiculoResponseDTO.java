@@ -18,7 +18,7 @@ public record VeiculoResponseDTO(
         LocalDateTime ano,
         String cor,
         CategoriaVeiculo categoriaVeiculo,
-        Integer quilometragem,
+        Double quilometragem,
         LocalDateTime createdAt
 ) {
 }

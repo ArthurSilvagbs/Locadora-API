@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record ManutencaoCreateDTO(
-        Veiculo veiculo,
+        String veiculoId,
         LocalDateTime dataManutencao,
         String descricao,
         BigDecimal valor

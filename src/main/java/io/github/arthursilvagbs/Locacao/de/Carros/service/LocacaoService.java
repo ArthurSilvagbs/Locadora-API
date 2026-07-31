@@ -73,6 +73,7 @@ public class LocacaoService {
        veiculoRepository.save(veiculo);
 
        locacao.setStatusLocacao(StatusLocacao.RETIRADO);
+       locacao.setKmRetirada(veiculo.getQuilometragem());
        Locacao locacaoAtualizada = repository.save(locacao);
 
        return mapper.mapearParaResponse(locacaoAtualizada);
@@ -93,6 +94,7 @@ public class LocacaoService {
        veiculoRepository.save(veiculo);
 
        locacao.setStatusLocacao(StatusLocacao.DEVOLVIDO);
+       locacao.setKmDevolucao(veiculo.getQuilometragem());
        Locacao locacaoAtualizada = repository.save(locacao);
 
        return mapper.mapearParaResponse(locacaoAtualizada);
