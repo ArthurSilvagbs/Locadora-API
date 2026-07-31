@@ -59,7 +59,7 @@ public class Veiculo {
     private CategoriaVeiculo categoriaVeiculo;
 
     @Setter
-    @Column(precision = 7, scale = 1, nullable = false)
+    @Column(nullable = false)
     private Double quilometragem;
 
     @Setter
@@ -98,7 +98,7 @@ public class Veiculo {
             LocalDateTime ano,
             String cor,
             CategoriaVeiculo categoriaVeiculo,
-            Integer quilometragem,
+            Double quilometragem,
             FilialLocadora filialAtual
     ) {
         this.numeroChassi = numeroChassi;

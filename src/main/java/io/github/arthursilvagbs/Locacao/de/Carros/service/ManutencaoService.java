@@ -4,9 +4,13 @@ import io.github.arthursilvagbs.Locacao.de.Carros.dto.manutencao.ManutencaoCreat
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.manutencao.ManutencaoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.manutencao.ManutencaoUpdateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Manutencao;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.StatusInvalidoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.ManutencaoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.ManutencaoRepository;
+import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,14 +24,30 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ManutencaoService {
+
    private final ManutencaoRepository repository;
    private final ManutencaoMapper mapper;
+   private final VeiculoRepository veiculoRepository;
 
    @Transactional
-   public ManutencaoResponseDTO criarManutencao(ManutencaoCreateDTO dto) {
-      Manutencao manutencao = mapper.mapearParaManutencao(dto);
-      repository.save(manutencao);
-      return mapper.mapearParaResponse(manutencao);
+   public ManutencaoResponseDTO criarManutencao(ManutencaoCreateDTO dto, String veiculoId) {
+      Veiculo veiculo = repository.findById(UUID.fromString(veiculoId))
+              .orElseThrow(() -> new EntidadeNaoEncontradaException("Veículo não encontrado.")).getVeiculo();
+      Manutencao manutencao = mapper.mapearParaManutencao(dto, veiculo);
+      Veiculo veiculoManutencao = manutencao.getVeiculo();
+
+      if (veiculoManutencao.getStatusVeiculo() == StatusVeiculo.LOCADO) {
+          throw new StatusInvalidoException("O veículo está locado no momento.");
+      }
+      if (veiculoManutencao.getStatusVeiculo() == StatusVeiculo.EM_MANUTENCAO) {
+          throw new StatusInvalidoException("O veículo já está em manutenção.");
+      }
+
+      veiculoManutencao.setStatusVeiculo(StatusVeiculo.EM_MANUTENCAO);
+      veiculoRepository.save(veiculoManutencao);
+
+      Manutencao manutencaoSalva = repository.save(manutencao);
+      return mapper.mapearParaResponse(manutencaoSalva);
    }
 
    @Transactional(readOnly = true)

@@ -14,7 +14,7 @@ public record VeiculoCreateDTO(
         LocalDateTime ano,
         String cor,
         CategoriaVeiculo categoriaVeiculo,
-        Integer quilometragem,
+        Double quilometragem,
         String filialAtualId
 ) {
 }
