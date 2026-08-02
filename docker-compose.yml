@@ -1,0 +1,14 @@
+services: # o agrupador que diz "quais conteiners eu quero rodar aqui"
+  postgres: # o nome do serviço, e tambem é o agrupador do primeiro conteiner. Cada serviço, que é agrupado por um nome, diz respeito a um conteiner, e cada conteiner, é "independente"
+    image: postgres:16 # imagem do postgres, que contem um sistema linux minimo pra rodar, o binario do server do postgres, algumas ferramentas de cliente, um diretorio que fica dentro do conteiner, entre outras coisas. Basicamente, o necessario pro servidor do postgres rodar
+    environment: # agrupador para variaveis de ambiente do conteiner, no caso, ja que o conteiner é pro banco de dados, são as credenciais do banco
+      POSTGRES_USER: locadora # usuario do banco de dados
+      POSTGRES_PASSWORD: locadora123 # senha do banco de dados
+      POSTGRES_DB: locadora_db # identificação do banco de dados em si, o nome do schema
+    ports: # agrupador pras portas do conteiner
+      - "5433:5432" # aqui o padrao é o seguinte, o conteiner roda dentro do pc, ele tem portas proprias, e pra ele conversar com o SO do computador, colocamos 'portaSO : portaConteiner', geralmente iguais
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
