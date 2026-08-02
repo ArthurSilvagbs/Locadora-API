@@ -1,8 +1,16 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 public record PessoaFisicaUpdateDTO(
-        String email,
-        String telefone,
-        String endereco
+
+   @Email(message = "Formato de Email inválido.")
+   @NotBlank(message = "Campo 'email' é obrigatório.")
+   String email,
+
+   String telefone,
+
+   String endereco
 ) {
 }
