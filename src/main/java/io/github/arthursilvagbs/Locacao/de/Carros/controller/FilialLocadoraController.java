@@ -2,6 +2,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.filialLocadora.FilialLocadoraCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.filialLocadora.FilialLocadoraResponseDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.filialLocadora.FilialLocadoraUpdateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.service.FilialLocadoraService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,4 +39,22 @@ public class FilialLocadoraController {
       Page<FilialLocadoraResponseDTO> responsePaginado = service.buscarTodosPaginado();
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginado);
    }
+
+   @PutMapping("/{id}")
+   public ResponseEntity<FilialLocadoraResponseDTO> atualizarFilialPorId(
+      @Valid @RequestBody FilialLocadoraUpdateDTO dto,
+      @PathVariable String id
+   ) {
+      FilialLocadoraResponseDTO response = service.atualizarFilialLocadoraPorId(dto, id);
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+   }
+
+   @DeleteMapping("/{id}")
+   public ResponseEntity<Void> deletarFilialPorId(
+      @PathVariable String id
+   ) {
+      service.deletarFilialLocadoraPorId(id);
+      return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+   }
+
 }

@@ -1,5 +1,7 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.ConfirmarDevolucaoDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.ConfirmarRetiradaDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.*;
@@ -60,8 +62,8 @@ public class LocacaoService {
    }
 
    @Transactional
-   public LocacaoResponseDTO confirmarRetirada(String locacaoId, Double kmPreRetirada) {
-       Locacao locacao = repository.findById(UUID.fromString(locacaoId))
+   public LocacaoResponseDTO confirmarRetirada(ConfirmarRetiradaDTO dto, String idLocacao) {
+       Locacao locacao = repository.findById(UUID.fromString(idLocacao))
                .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
 
        if (locacao.getStatusLocacao() != StatusLocacao.PENDENTE_DE_RETIRADA) {
@@ -69,7 +71,7 @@ public class LocacaoService {
        }
 
        Veiculo veiculo = locacao.getVeiculo();
-       veiculo.setQuilometragem(kmPreRetirada);
+       veiculo.setQuilometragem(dto.kmPreRetirada());
        veiculoRepository.save(veiculo);
 
        locacao.setStatusLocacao(StatusLocacao.RETIRADO);
@@ -80,8 +82,8 @@ public class LocacaoService {
    }
 
    @Transactional
-   public LocacaoResponseDTO confirmarDevolucao(String locacaoId, Double kmPosDevolucao) {
-       Locacao locacao = repository.findById(UUID.fromString(locacaoId))
+   public LocacaoResponseDTO confirmarDevolucao(ConfirmarDevolucaoDTO dto, String idLocacao) {
+       Locacao locacao = repository.findById(UUID.fromString(idLocacao))
                .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
 
        if (locacao.getStatusLocacao() != StatusLocacao.RETIRADO) {
@@ -89,7 +91,7 @@ public class LocacaoService {
        }
 
        Veiculo veiculo = locacao.getVeiculo();
-       veiculo.setQuilometragem(veiculo.getQuilometragem() + kmPosDevolucao);
+       veiculo.setQuilometragem(veiculo.getQuilometragem() + dto.kmPosDevolucao());
        veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
        veiculoRepository.save(veiculo);
 
