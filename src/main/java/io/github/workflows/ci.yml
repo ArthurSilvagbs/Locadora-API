@@ -1,0 +1,25 @@
+name: CI Locadora API
+on:
+  push:
+    branches: [develop]
+  pull_request: [develop]
+jobs:
+  build-and-test:
+    name: Build e Testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build com Maven
+        run: mvn -B clean compile
+
+      - name: Rodar Testes
+        run: mvn -B test
