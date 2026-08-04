@@ -2,7 +2,8 @@ name: CI Locadora API
 on:
   push:
     branches: [develop]
-  pull_request: [develop]
+  pull_request:
+    branches: [develop]
 jobs:
   build-and-test:
     name: Build e Testes
@@ -14,7 +15,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
