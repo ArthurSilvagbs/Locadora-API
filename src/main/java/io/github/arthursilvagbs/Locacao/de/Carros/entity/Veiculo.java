@@ -48,7 +48,7 @@ public class Veiculo {
 
     @Setter
     @Column(nullable = false)
-    private LocalDateTime ano;
+    private Integer ano;
 
     @Setter
     @Column
@@ -95,7 +95,7 @@ public class Veiculo {
             String renavam,
             String modelo,
             String marca,
-            LocalDateTime ano,
+            Integer ano,
             String cor,
             CategoriaVeiculo categoriaVeiculo,
             Double quilometragem,
