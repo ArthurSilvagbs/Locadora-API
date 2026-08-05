@@ -1,39 +1,25 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaCreateDTO;
-// Import do DTO de resposta (o que o service devolve depois de mapear a entidade)
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaResponseDTO;
-// Import do DTO usado para atualizar uma PessoaFisica já existente
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaUpdateDTO;
-// Import da entidade JPA que representa uma Pessoa Física no banco
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.PessoaFisica;
-// Import da exception lançada quando um registro não é encontrado (ex: buscar por um ID que não existe)
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
-// Import da exception lançada quando tentamos cadastrar algo duplicado (CPF ou email já existentes)
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
-// Import do mapper responsável por converter DTO <-> Entidade <-> DTO de resposta
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.PessoaFisicaMapper;
-// Import do repository (camada que fala com o banco); vamos mockar ele, não usar um banco de verdade
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.PessoaFisicaRepository;
 
-// Anotações de teste do JUnit 5: marcam método de teste e dão um nome legível a ele
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-// Permite ligar o Mockito ao JUnit 5, habilitando @Mock e @InjectMocks nesta classe
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// Utilitário de UUID, usado para gerar IDs falsos nos testes
 import java.util.UUID;
-// Optional é o tipo que o Spring Data usa para representar "achei" ou "não achei" no findById/findByX
 import java.util.Optional;
-
-// Métodos estáticos do AssertJ, usados para fazer as verificações (assertThat...)
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-// Métodos estáticos do Mockito, usados para configurar comportamento dos mocks e verificar chamadas
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
