@@ -1,40 +1,26 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
-// DTO de entrada usado pra criar uma PessoaJuridica
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaCreateDTO;
-// DTO de resposta devolvido pelo Service
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaResponseDTO;
-// DTO usado pra atualizar uma PessoaJuridica existente
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaUpdateDTO;
-// Entidade JPA que representa uma Pessoa Jurídica no banco
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.PessoaJuridica;
-// Exception lançada quando um registro não é encontrado
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
-// Exception lançada quando tentamos cadastrar CNPJ ou email já existentes
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
-// Mapper que converte DTO <-> Entidade <-> DTO de resposta
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.PessoaJuridicaMapper;
-// Repository que fala com o banco; será mockado, não usamos banco de verdade
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.PessoaJuridicaRepository;
 
-// Anotações de teste do JUnit 5
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-// Liga o Mockito ao JUnit 5, habilitando @Mock e @InjectMocks
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// UUID pra gerar IDs falsos
 import java.util.UUID;
-// Optional representa "achei"/"não achei" no findById/findByX
 import java.util.Optional;
 
-// Métodos estáticos do AssertJ pras verificações
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-// Métodos estáticos do Mockito pra configurar mocks e verificar chamadas
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -42,277 +28,350 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Liga o Mockito nesta classe: processa as anotações @Mock e @InjectMocks abaixo
 @ExtendWith(MockitoExtension.class)
 class PessoaJuridicaServiceTest {
 
-    // Mock do repository: não bate no banco de verdade, nós decidimos as respostas
-    @Mock
-    private PessoaJuridicaRepository repository;
+   @Mock
+   private PessoaJuridicaRepository repository;
 
-    // Mock do mapper: isola o teste só na lógica do Service
-    @Mock
-    private PessoaJuridicaMapper mapper;
+   @Mock
+   private PessoaJuridicaMapper mapper;
 
-    // Instância REAL do Service, com os mocks acima injetados nos campos do construtor
-    @InjectMocks
-    private PessoaJuridicaService service;
+   @InjectMocks
+   private PessoaJuridicaService service;
 
-    // ---------------------------------------------------------------------
-    // MÉTODO: criarPessoaJuridica
-    // ---------------------------------------------------------------------
+   // ---------------------------------------------------------------------
+   // MÉTODO: criarPessoaJuridica
+   // ---------------------------------------------------------------------
 
-    @Test
-    @DisplayName("criarPessoaJuridica deve salvar e retornar o DTO quando CNPJ e email não existem")
-    void criarPessoaJuridica_dadosValidos_retornaResponseDTO() {
-        // ARRANGE: DTO de entrada, como se fosse o corpo de uma requisição de cadastro
-        PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
-                "Locadora Silva LTDA",   // nome
-                "contato@silva.com",     // email
-                "1140028922",            // telefone
-                "Av. Central, 500",      // endereco
-                "12345678000199"         // cnpj
-        );
+   @Test
+   @DisplayName("criarPessoaJuridica deve salvar e retornar o DTO quando CNPJ e email não existem")
+   void criarPessoaJuridica_dadosValidos_retornaResponseDTO() {
+      PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199"
+      );
 
-        // Entidade que o mapper "fingirá" devolver ao receber o dto acima
-        PessoaJuridica entidadeMapeada = new PessoaJuridica(
-                dto.nome(), dto.email(), dto.telefone(), dto.endereco(), dto.cnpj()
-        );
+      PessoaJuridica entidadeMapeada = new PessoaJuridica(
+         dto.nome(), dto.email(), dto.telefone(), dto.endereco(), dto.cnpj()
+      );
+      PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
+         UUID.randomUUID(), dto.nome(), dto.email(), dto.telefone(), dto.endereco(), dto.cnpj(), null
+      );
 
-        // DTO de resposta esperado depois do mapeamento final
-        PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
-                UUID.randomUUID(), dto.nome(), dto.email(), dto.telefone(), dto.endereco(), dto.cnpj(), null
-        );
+      when(repository.existsByCnpj(dto.cnpj())).thenReturn(false);
+      when(repository.existsByEmail(dto.email())).thenReturn(false);
+      when(mapper.mapearParaPessoaJuridica(dto)).thenReturn(entidadeMapeada);
+      when(repository.save(entidadeMapeada)).thenReturn(entidadeMapeada);
+      when(mapper.mapearParaResponse(entidadeMapeada)).thenReturn(responseEsperado);
 
-        // Ensina o mock: esse CNPJ ainda não existe no banco
-        when(repository.existsByCnpj(dto.cnpj())).thenReturn(false);
+      PessoaJuridicaResponseDTO resultado = service.criarPessoaJuridica(dto);
 
-        // Ensina o mock: esse email ainda não existe no banco
-        when(repository.existsByEmail(dto.email())).thenReturn(false);
+      assertThat(resultado).isEqualTo(responseEsperado);
 
-        // Ensina o mock: o mapper transforma o dto na entidade que criamos
-        when(mapper.mapearParaPessoaJuridica(dto)).thenReturn(entidadeMapeada);
+      verify(repository, times(1)).save(entidadeMapeada);
+   }
 
-        // Ensina o mock: repository.save recebe a entidade mapeada e devolve ela mesma
-        // (repare que aqui o Service usa o RETORNO do save, diferente do PessoaFisicaService)
-        when(repository.save(entidadeMapeada)).thenReturn(entidadeMapeada);
+   @Test
+   @DisplayName("criarPessoaJuridica deve lançar RegistroDuplicadoException quando o CNPJ já existe")
+   void criarPessoaJuridica_cnpjDuplicado_lancaExcecao() {
+      PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199"
+      );
 
-        // Ensina o mock: o mapper transforma a entidade salva no response esperado
-        when(mapper.mapearParaResponse(entidadeMapeada)).thenReturn(responseEsperado);
+      when(repository.existsByCnpj(dto.cnpj())).thenReturn(true);
 
-        // ACT: chama o método real do Service
-        PessoaJuridicaResponseDTO resultado = service.criarPessoaJuridica(dto);
+      assertThatThrownBy(() -> service.criarPessoaJuridica(dto))
+         .isInstanceOf(RegistroDuplicadoException.class)
+         .hasMessage("CNPJ já cadastrado.");
 
-        // ASSERT: o resultado devolvido deve ser exatamente o response esperado
-        assertThat(resultado).isEqualTo(responseEsperado);
+      verify(repository, never()).existsByEmail(anyString());
+      verify(repository, never()).save(any());
+   }
 
-        // Verifica que o save foi chamado exatamente uma vez com a entidade mapeada
-        verify(repository, times(1)).save(entidadeMapeada);
-    }
+   @Test
+   @DisplayName("criarPessoaJuridica deve lançar RegistroDuplicadoException quando o email já existe")
+   void criarPessoaJuridica_emailDuplicado_lancaExcecao() {
+      PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199"
+      );
 
-    @Test
-    @DisplayName("criarPessoaJuridica deve lançar RegistroDuplicadoException quando o CNPJ já existe")
-    void criarPessoaJuridica_cnpjDuplicado_lancaExcecao() {
-        // ARRANGE: DTO de entrada qualquer, o conteúdo não importa pra esse teste
-        PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
-                "Locadora Silva LTDA", "contato@silva.com", "1140028922", "Av. Central, 500", "12345678000199"
-        );
+      when(repository.existsByCnpj(dto.cnpj())).thenReturn(false);
+      when(repository.existsByEmail(dto.email())).thenReturn(true);
 
-        // Ensina o mock: esse CNPJ já existe, forçando o primeiro "if" a barrar o cadastro
-        when(repository.existsByCnpj(dto.cnpj())).thenReturn(true);
+      assertThatThrownBy(() -> service.criarPessoaJuridica(dto))
+         .isInstanceOf(RegistroDuplicadoException.class)
+         .hasMessage("Email já cadastrado.");
 
-        // ACT + ASSERT: chama o método e confere a exception lançada
-        assertThatThrownBy(() -> service.criarPessoaJuridica(dto))
-                .isInstanceOf(RegistroDuplicadoException.class)
-                .hasMessage("CNPJ já cadastrado.");
+      verify(repository, never()).save(any());
+   }
 
-        // Confirma que a validação de email nunca rodou (o "if" do CNPJ interrompeu antes)
-        verify(repository, never()).existsByEmail(anyString());
+   // ---------------------------------------------------------------------
+   // MÉTODO: buscarPessoaJuridicaPorId
+   // ---------------------------------------------------------------------
 
-        // Confirma que o save nunca foi chamado
-        verify(repository, never()).save(any());
-    }
+   @Test
+   @DisplayName("buscarPessoaJuridicaPorId deve retornar o DTO quando o ID existe")
+   void buscarPessoaJuridicaPorId_idExistente_retornaResponseDTO() {
+      UUID id = UUID.randomUUID();
 
-    @Test
-    @DisplayName("criarPessoaJuridica deve lançar RegistroDuplicadoException quando o email já existe")
-    void criarPessoaJuridica_emailDuplicado_lancaExcecao() {
-        // ARRANGE: DTO de entrada padrão
-        PessoaJuridicaCreateDTO dto = new PessoaJuridicaCreateDTO(
-                "Locadora Silva LTDA", "contato@silva.com", "1140028922", "Av. Central, 500", "12345678000199"
-        );
+      PessoaJuridica entidade = new PessoaJuridica(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199"
+      );
+      PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
+         id,
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199",
+         null
+      );
 
-        // CNPJ não existe ainda, então essa validação passa
-        when(repository.existsByCnpj(dto.cnpj())).thenReturn(false);
+      when(repository.findById(id)).thenReturn(Optional.of(entidade));
+      when(mapper.mapearParaResponse(entidade)).thenReturn(responseEsperado);
 
-        // Email já existe, deve barrar o cadastro
-        when(repository.existsByEmail(dto.email())).thenReturn(true);
+      PessoaJuridicaResponseDTO resultado = service.buscarPessoaJuridicaPorId(id.toString());
 
-        // ACT + ASSERT: confere o tipo e a mensagem da exception
-        assertThatThrownBy(() -> service.criarPessoaJuridica(dto))
-                .isInstanceOf(RegistroDuplicadoException.class)
-                .hasMessage("Email já cadastrado.");
+      assertThat(resultado).isEqualTo(responseEsperado);
+   }
 
-        // Confirma que, mesmo passando pela validação de CNPJ, o save nunca foi chamado
-        verify(repository, never()).save(any());
-    }
+   @Test
+   @DisplayName("buscarPessoaJuridicaPorId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
+   void buscarPessoaJuridicaPorId_idInexistente_lancaExcecao() {
+      UUID id = UUID.randomUUID();
 
-    // ---------------------------------------------------------------------
-    // MÉTODO: buscarPessoaJuridicaPorId
-    // ---------------------------------------------------------------------
+      when(repository.findById(id)).thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("buscarPessoaJuridicaPorId deve retornar o DTO quando o ID existe")
-    void buscarPessoaJuridicaPorId_idExistente_retornaResponseDTO() {
-        // ARRANGE: UUID que vamos simular como existente no banco
-        UUID id = UUID.randomUUID();
+      assertThatThrownBy(() -> service.buscarPessoaJuridicaPorId(id.toString()))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Cliente não encontrado.");
 
-        // Entidade que o repository "encontrará" para esse ID
-        PessoaJuridica entidade = new PessoaJuridica(
-                "Locadora Silva LTDA", "contato@silva.com", "1140028922", "Av. Central, 500", "12345678000199"
-        );
+      verify(mapper, never()).mapearParaResponse(any());
+   }
 
-        // DTO de resposta esperado após o mapeamento
-        PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
-                id, "Locadora Silva LTDA", "contato@silva.com", "1140028922", "Av. Central, 500", "12345678000199", null
-        );
+   // ---------------------------------------------------------------------
+   // MÉTODO: buscarPessoaJuridicaViaCnpj
+   // ---------------------------------------------------------------------
 
-        // Ensina o mock: encontrou a entidade pra esse ID
-        when(repository.findById(id)).thenReturn(Optional.of(entidade));
+   @Test
+   @DisplayName("buscarPessoaJuridicaPorId deve retornar o DTO quando o CNPJ existe")
+   void buscarPessoaJuridicaPorCnpj_cnpjExistente_retornaResponseDTO() {
+      String cnpj = "12345678000199";
 
-        // Ensina o mock: o mapper converte a entidade encontrada no response esperado
-        when(mapper.mapearParaResponse(entidade)).thenReturn(responseEsperado);
+      PessoaJuridica entidade = new PessoaJuridica(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         cnpj
+      );
+      PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
+         UUID.randomUUID(),
+         entidade.getNome(),
+         entidade.getEmail(),
+         entidade.getTelefone(),
+         entidade.getEndereco(),
+         entidade.getCnpj(),
+         entidade.getCreatedAt()
+      );
 
-        // ACT: chama o método passando o ID como String (Service faz UUID.fromString por dentro)
-        PessoaJuridicaResponseDTO resultado = service.buscarPessoaJuridicaPorId(id.toString());
+      when(repository.findByCnpj(cnpj)).thenReturn(Optional.of(entidade));
+      when(mapper.mapearParaResponse(entidade)).thenReturn(responseEsperado);
 
-        // ASSERT: resultado deve bater com o response esperado
-        assertThat(resultado).isEqualTo(responseEsperado);
-    }
+      PessoaJuridicaResponseDTO resultado = service.buscarPessoaJuridicaPorCnpj(cnpj);
 
-    @Test
-    @DisplayName("buscarPessoaJuridicaPorId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
-    void buscarPessoaJuridicaPorId_idInexistente_lancaExcecao() {
-        // ARRANGE: UUID que vamos simular como inexistente
-        UUID id = UUID.randomUUID();
+      assertThat(resultado).isEqualTo(responseEsperado);
+   }
 
-        // Ensina o mock: não encontrou nada pra esse ID (Optional vazio)
-        when(repository.findById(id)).thenReturn(Optional.empty());
+   @Test
+   @DisplayName("buscarPessoaJuridicaPorId deve lançar EntidadeNaoEncontradaException quando o CNPJ não existe")
+   void buscarPessoaJuridicaPorCnpj_cnpjInexistente_lancaExcecao() {
+      String cnpj = "1140028922";
 
-        // ACT + ASSERT: o Service deve traduzir isso numa exception de negócio
-        assertThatThrownBy(() -> service.buscarPessoaJuridicaPorId(id.toString()))
-                .isInstanceOf(EntidadeNaoEncontradaException.class)
-                .hasMessage("Cliente não encontrado.");
+      when(repository.findByCnpj(cnpj)).thenReturn(Optional.empty());
 
-        // Confirma que o mapper nunca foi chamado, já que não havia entidade pra mapear
-        verify(mapper, never()).mapearParaResponse(any());
-    }
+      assertThatThrownBy(() -> service.buscarPessoaJuridicaPorCnpj(cnpj))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Cliente não encontrado.");
 
-    // ---------------------------------------------------------------------
-    // MÉTODO: atualizarPessoaJuridicaViaId
-    // ---------------------------------------------------------------------
+      verify(mapper, never()).mapearParaResponse(any());
+   }
 
-    @Test
-    @DisplayName("atualizarPessoaJuridicaViaId deve atualizar e retornar o DTO quando o ID existe")
-    void atualizarPessoaJuridicaViaId_idExistente_atualizaERetorna() {
-        // ARRANGE: ID que vamos simular como existente
-        UUID id = UUID.randomUUID();
+   // ---------------------------------------------------------------------
+   // MÉTODO: atualizarPessoaJuridicaViaId
+   // ---------------------------------------------------------------------
 
-        // Entidade "atual", como se já estivesse salva antes da atualização
-        PessoaJuridica entidadeExistente = new PessoaJuridica(
-                "Nome Antigo LTDA", "antigo@silva.com", "1140028922", "Endereco antigo", "12345678000199"
-        );
+   @Test
+   @DisplayName("atualizarPessoaJuridicaViaId deve atualizar e retornar o DTO quando o ID existe")
+   void atualizarPessoaJuridicaViaId_idExistente_atualizaERetorna() {
+      UUID id = UUID.randomUUID();
 
-        // DTO com os dados novos que o usuário quer aplicar (CNPJ não é atualizável, repare)
-        PessoaJuridicaUpdateDTO dtoAtualizacao = new PessoaJuridicaUpdateDTO(
-                "Nome Novo LTDA", "novo@silva.com", "1140028900", "Endereco novo"
-        );
+      PessoaJuridica entidadeExistente = new PessoaJuridica(
+         "Nome Antigo LTDA",
+         "antigo@silva.com",
+         "1140028922",
+         "Endereco antigo",
+         "12345678000199"
+      );
+      PessoaJuridicaUpdateDTO dtoAtualizacao = new PessoaJuridicaUpdateDTO(
+         "Nome Novo LTDA",
+         "novo@silva.com",
+         "1140028900",
+         "Endereco novo"
+      );
+      PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
+         id,
+         "Nome Novo LTDA",
+         "novo@silva.com",
+         "1140028900",
+         "Endereco novo",
+         "12345678000199",
+         null
+      );
 
-        // DTO de resposta esperado depois da atualização e do mapeamento
-        PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
-                id, "Nome Novo LTDA", "novo@silva.com", "1140028900", "Endereco novo", "12345678000199", null
-        );
+      when(repository.findById(id)).thenReturn(Optional.of(entidadeExistente));
+      when(mapper.mapearParaResponse(any(PessoaJuridica.class))).thenReturn(responseEsperado);
 
-        // Ensina o mock: o repository encontra a entidade existente pra esse ID
-        when(repository.findById(id)).thenReturn(Optional.of(entidadeExistente));
+      PessoaJuridicaResponseDTO resultado = service.atualizarPessoaJuridicaViaId(dtoAtualizacao, id.toString());
 
-        // Ensina o mock: depois de atualizada, o mapper devolve o response esperado
-        // any(PessoaJuridica.class) porque é a mesma instância, só com os campos já alterados
-        when(mapper.mapearParaResponse(any(PessoaJuridica.class))).thenReturn(responseEsperado);
+      assertThat(resultado).isEqualTo(responseEsperado);
 
-        // ACT: chama a atualização passando o DTO novo e o ID como String
-        PessoaJuridicaResponseDTO resultado = service.atualizarPessoaJuridicaViaId(dtoAtualizacao, id.toString());
+      verify(repository, times(1)).save(entidadeExistente);
+   }
 
-        // ASSERT: o resultado deve ser o response esperado
-        assertThat(resultado).isEqualTo(responseEsperado);
+   @Test
+   @DisplayName("atualizarPessoaJuridicaViaId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
+   void atualizarPessoaJuridicaViaId_idInexistente_lancaExcecao() {
+      UUID id = UUID.randomUUID();
 
-        // Verifica que o save foi chamado com a mesma instância vinda do findById
-        verify(repository, times(1)).save(entidadeExistente);
-    }
+      PessoaJuridicaUpdateDTO dtoAtualizacao = new PessoaJuridicaUpdateDTO(
+         "Nome Novo LTDA",
+         "novo@silva.com",
+         "1140028900",
+         "Endereco novo"
+      );
 
-    @Test
-    @DisplayName("atualizarPessoaJuridicaViaId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
-    void atualizarPessoaJuridicaViaId_idInexistente_lancaExcecao() {
-        // ARRANGE: ID que vamos simular como inexistente
-        UUID id = UUID.randomUUID();
+      when(repository.findById(id)).thenReturn(Optional.empty());
 
-        // DTO de atualização qualquer, o conteúdo não importa pra esse teste
-        PessoaJuridicaUpdateDTO dtoAtualizacao = new PessoaJuridicaUpdateDTO(
-                "Nome Novo LTDA", "novo@silva.com", "1140028900", "Endereco novo"
-        );
+      assertThatThrownBy(() -> service.atualizarPessoaJuridicaViaId(dtoAtualizacao, id.toString()))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Cliente não econtrado.");
 
-        // Ensina o mock: não existe entidade pra esse ID
-        when(repository.findById(id)).thenReturn(Optional.empty());
+      verify(repository, never()).save(any());
+   }
 
-        // ACT + ASSERT: o Service deve lançar a exception antes de tentar atualizar
-        assertThatThrownBy(() -> service.atualizarPessoaJuridicaViaId(dtoAtualizacao, id.toString()))
-                .isInstanceOf(EntidadeNaoEncontradaException.class)
-                .hasMessage("Cliente não econtrado."); // texto exato do Service (com o typo "econtrado")
+   // ---------------------------------------------------------------------
+   // MÉTODO: atualizarPessoaJuridicaViaCnpj
+   // ---------------------------------------------------------------------
 
-        // Garante que, sem entidade encontrada, o save nunca é chamado
-        verify(repository, never()).save(any());
-    }
+   @Test
+   @DisplayName("atualizarPessoaJuridicaViaCnpj deve atualizar e retornar o DTO quando o CNPJ existe")
+   void atualizarPessoaJuridicaViaCnpj_CnpjExistente_atualizaERetorna() {
+      String cnpj = "1140028900";
 
-    // ---------------------------------------------------------------------
-    // MÉTODO: deletarPessoaJuridicaViaId
-    // ---------------------------------------------------------------------
+      PessoaJuridica entidadeExistente = new PessoaJuridica(
+         "Nome Antigo LTDA",
+         "antigo@silva.com",
+         "1140028922",
+         "Endereco antigo",
+         cnpj
+      );
+      PessoaJuridicaUpdateDTO dtoAtualizacao = new PessoaJuridicaUpdateDTO(
+         "Nome Novo LTDA",
+         "novo@silva.com",
+         "1140028900",
+         "Endereco novo"
+      );
+      PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
+         entidadeExistente.getIdClienteq(),
+         entidadeExistente.getNome(),
+         entidadeExistente.getEmail(),
+         entidadeExistente.getTelefone(),
+         entidadeExistente.getEndereco(),
+         entidadeExistente.getCnpj(),
+         entidadeExistente.getCreatedAt()
+      );
 
-    @Test
-    @DisplayName("deletarPessoaJuridicaViaId deve deletar quando o ID existe")
-    void deletarPessoaJuridicaViaId_idExistente_deleta() {
-        // ARRANGE: ID que vamos simular como existente
-        UUID id = UUID.randomUUID();
+      when(repository.findByCnpj(cnpj)).thenReturn(Optional.of(entidadeExistente));
+      when(mapper.mapearParaResponse(entidadeExistente)).thenReturn(responseEsperado);
 
-        // Entidade que o repository "encontrará" pra esse ID
-        PessoaJuridica entidadeExistente = new PessoaJuridica(
-                "Locadora Silva LTDA", "contato@silva.com", "1140028922", "Av. Central, 500", "12345678000199"
-        );
+      PessoaJuridicaResponseDTO response = service.atualizarPessoaJuridicaViaCnpj(dtoAtualizacao, cnpj);
 
-        // Ensina o mock: o findById encontra a entidade
-        when(repository.findById(id)).thenReturn(Optional.of(entidadeExistente));
+      assertThat(response).isEqualTo(responseEsperado);
+   }
 
-        // ACT: chama o método de deleção (void, não retorna nada)
-        service.deletarPessoaJuridicaViaId(id.toString());
+   @Test
+   @DisplayName("atualizarPessoaJuridicaViaCnpj deve lançar EntidadeNaoEncontradaException quando o CNPJ não existe")
+   void atualizarPessoaJuridicaViaCnpj_cnpjInexistente_lancaExcecao() {
+      String cnpj = "1140028900";
 
-        // ASSERT: já que não há retorno, confirmamos o comportamento via verify
-        // o delete deve ter sido chamado exatamente uma vez com a entidade encontrada
-        verify(repository, times(1)).delete(entidadeExistente);
-    }
+      PessoaJuridicaUpdateDTO dto = new PessoaJuridicaUpdateDTO(
+         "Novo nome Locadora Silva LTDA",
+         "novolocadorasilva@email.com",
+         "00912345678",
+         "Novo Endereço"
+      );
 
-    @Test
-    @DisplayName("deletarPessoaJuridicaViaId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
-    void deletarPessoaJuridicaViaId_idInexistente_lancaExcecao() {
-        // ARRANGE: ID que vamos simular como inexistente
-        UUID id = UUID.randomUUID();
+      when(repository.findByCnpj(cnpj)).thenReturn(Optional.empty());
 
-        // Ensina o mock: não existe entidade pra esse ID
-        when(repository.findById(id)).thenReturn(Optional.empty());
+      assertThatThrownBy(() -> service.atualizarPessoaJuridicaViaCnpj(dto, cnpj))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Cliente não econtrado.");
 
-        // ACT + ASSERT: o Service deve lançar a exception ao invés de tentar deletar algo inexistente
-        assertThatThrownBy(() -> service.deletarPessoaJuridicaViaId(id.toString()))
-                .isInstanceOf(EntidadeNaoEncontradaException.class)
-                .hasMessage("Cliente não encontrado.");
+      verify(repository, never()).save(any());
+   }
 
-        // Garante que o delete nunca foi chamado
-        verify(repository, never()).delete(any());
-    }
+   // ---------------------------------------------------------------------
+   // MÉTODO: deletarPessoaJuridicaViaId
+   // ---------------------------------------------------------------------
+
+   @Test
+   @DisplayName("deletarPessoaJuridicaViaId deve deletar quando o ID existe")
+   void deletarPessoaJuridicaViaId_idExistente_deleta() {
+      UUID id = UUID.randomUUID();
+
+      PessoaJuridica entidadeExistente = new PessoaJuridica(
+         "Locadora Silva LTDA",
+         "contato@silva.com",
+         "1140028922",
+         "Av. Central, 500",
+         "12345678000199"
+      );
+
+      when(repository.findById(id)).thenReturn(Optional.of(entidadeExistente));
+
+      service.deletarPessoaJuridicaViaId(id.toString());
+
+      verify(repository, times(1)).delete(entidadeExistente);
+   }
+
+   @Test
+   @DisplayName("deletarPessoaJuridicaViaId deve lançar EntidadeNaoEncontradaException quando o ID não existe")
+   void deletarPessoaJuridicaViaId_idInexistente_lancaExcecao() {
+      UUID id = UUID.randomUUID();
+
+      when(repository.findById(id)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> service.deletarPessoaJuridicaViaId(id.toString()))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Cliente não encontrado.");
+
+      verify(repository, never()).delete(any());
+   }
 }
