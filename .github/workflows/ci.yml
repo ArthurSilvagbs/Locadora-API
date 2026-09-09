@@ -1,13 +1,16 @@
 name: CI Locadora API
+
 on:
   push:
     branches: [develop]
   pull_request:
     branches: [develop]
+
 jobs:
   build-and-test:
     name: Build e Testes
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16
@@ -22,6 +25,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,4 +41,6 @@ jobs:
         run: mvn -B clean compile
 
       - name: Rodar Testes
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: mvn -B test
