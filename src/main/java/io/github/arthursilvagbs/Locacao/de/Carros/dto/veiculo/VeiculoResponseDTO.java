@@ -15,7 +15,7 @@ public record VeiculoResponseDTO(
         String renavam,
         String modelo,
         String marca,
-        LocalDateTime ano,
+        Integer ano,
         String cor,
         CategoriaVeiculo categoriaVeiculo,
         Double quilometragem,

@@ -21,7 +21,7 @@ public class Manutencao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID idManutencao;
 
     @Setter
     @ManyToOne
@@ -37,7 +37,7 @@ public class Manutencao {
     private String descricao;
 
     @Setter
-    @Column(precision = 7, scale = 1)
+    @Column(name = "quilometragem_veiculo", precision = 7, scale = 1)
     private Integer quilimetragemVeiculo;
 
     @Setter

@@ -22,14 +22,14 @@ public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID idClienteq;
+    private UUID idCliente;
 
     @Setter
-    @Column(nullable = false, length = 80)
+    @Column(nullable = false)
     private String nome;
 
     @Setter
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Setter

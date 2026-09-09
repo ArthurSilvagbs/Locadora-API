@@ -22,7 +22,7 @@ public class FilialLocadoraMapper {
 
     public FilialLocadoraResponseDTO mapearParaResponse(FilialLocadora entidade) {
        return new FilialLocadoraResponseDTO(
-          entidade.getId(),
+          entidade.getIdLocadora(),
           entidade.getNomeFilial(),
           entidade.getCnpjFilial(),
           entidade.getUf(),

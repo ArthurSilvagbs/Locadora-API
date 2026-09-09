@@ -2,9 +2,9 @@ package io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo;
 
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record VeiculoCreateDTO(
@@ -27,8 +27,8 @@ public record VeiculoCreateDTO(
    @NotBlank(message = "O campo 'marca' é obrigatório.")
    String marca,
 
-   @NotBlank(message = "O campo 'ano' é obrigatório.")
-   LocalDateTime ano,
+   @NotNull(message = "O campo 'ano' é obrigatório.")
+   Integer ano,
 
    String cor,
 

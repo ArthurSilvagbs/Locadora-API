@@ -94,7 +94,7 @@ class LocacaoServiceTest {
     private Veiculo criarVeiculo(StatusVeiculo status) {
         Veiculo veiculo = new Veiculo(
                 "9BWZZZ377VT004251", "ABC1D23", "12345678901", "Onix", "Chevrolet",
-                LocalDateTime.of(2023, 1, 1, 0, 0), "Prata", CategoriaVeiculo.HATCH, 0.0, criarFilial()
+                2023, "Prata", CategoriaVeiculo.HATCH, 0.0, criarFilial()
         );
         // O construtor do Veiculo já define DISPONIVEL por padrão; aqui forçamos o status que o teste precisa
         veiculo.setStatusVeiculo(status);

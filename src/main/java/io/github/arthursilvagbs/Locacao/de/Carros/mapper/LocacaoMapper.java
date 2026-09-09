@@ -31,7 +31,7 @@ public class LocacaoMapper {
 
     public LocacaoResponseDTO mapearParaResponse(Locacao entidade) {
        return new LocacaoResponseDTO(
-          entidade.getId(),
+          entidade.getIdLocacao(),
           entidade.getCliente(),
           entidade.getVeiculo(),
           entidade.getValorLocacao(),

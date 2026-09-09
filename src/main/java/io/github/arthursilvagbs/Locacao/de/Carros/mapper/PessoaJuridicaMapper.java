@@ -20,7 +20,7 @@ public class PessoaJuridicaMapper {
 
     public PessoaJuridicaResponseDTO mapearParaResponse(PessoaJuridica entidade) {
        return new PessoaJuridicaResponseDTO(
-          entidade.getIdClienteq(),
+          entidade.getIdCliente(),
           entidade.getNome(),
           entidade.getEmail(),
           entidade.getTelefone(),

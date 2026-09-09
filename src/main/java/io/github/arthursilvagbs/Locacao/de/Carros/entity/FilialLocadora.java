@@ -21,14 +21,14 @@ public class FilialLocadora {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID idLocadora;
 
     @Setter
-    @Column(nullable = false, length = 50)
+    @Column(name = "nome_filial",nullable = false, length = 50)
     private String nomeFilial;
 
     @Setter
-    @Column(nullable = false, length = 18)
+    @Column(name = "cnpj_filial", nullable = false, length = 18)
     private String cnpjFilial;
 
     @Setter
@@ -48,7 +48,7 @@ public class FilialLocadora {
     private String telefone;
 
     @Setter
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String email;
 
     @Setter
