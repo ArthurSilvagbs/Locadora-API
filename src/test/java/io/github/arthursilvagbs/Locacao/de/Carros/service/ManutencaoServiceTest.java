@@ -83,7 +83,7 @@ class ManutencaoServiceTest {
       Manutencao manutencaoMapeada = new Manutencao(veiculo, dto.dataManutencao(), dto.descricao(), dto.valor());
 
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
-         manutencaoMapeada.getId(), veiculo, dto.dataManutencao(), dto.descricao(),
+         manutencaoMapeada .getIdManutencao(), veiculo, dto.dataManutencao(), dto.descricao(),
          manutencaoMapeada.getQuilimetragemVeiculo(), dto.valor()
       );
 
@@ -172,7 +172,7 @@ class ManutencaoServiceTest {
       Veiculo veiculo = criarVeiculo(StatusVeiculo.EM_MANUTENCAO);
       Manutencao manutencao = criarManutencaoEntidade(veiculo);
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
-         manutencao.getId(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
+         manutencao.getIdManutencao(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
          manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
       );
 
@@ -206,7 +206,7 @@ class ManutencaoServiceTest {
       Veiculo veiculo = criarVeiculo(StatusVeiculo.EM_MANUTENCAO);
       Manutencao manutencao = criarManutencaoEntidade(veiculo);
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
-         manutencao.getId(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
+         manutencao.getIdManutencao(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
          manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
       );
       Pageable pageable = PageRequest.of(0, 10, Sort.by("dataManutencao").descending());
@@ -234,7 +234,7 @@ class ManutencaoServiceTest {
          LocalDateTime.of(2026, 3, 2, 9, 0), "Troca de óleo e filtro", BigDecimal.valueOf(320.00)
       );
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
-         manutencao.getId(), veiculo, dto.dataManutencao(), dto.descricao(),
+         manutencao.getIdManutencao(), veiculo, dto.dataManutencao(), dto.descricao(),
          manutencao.getQuilimetragemVeiculo(), dto.valor()
       );
 

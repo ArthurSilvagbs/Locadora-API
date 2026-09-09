@@ -299,7 +299,7 @@ class PessoaJuridicaServiceTest {
          "Endereco novo"
       );
       PessoaJuridicaResponseDTO responseEsperado = new PessoaJuridicaResponseDTO(
-         entidadeExistente.getIdClienteq(),
+         entidadeExistente.getIdCliente(),
          entidadeExistente.getNome(),
          entidadeExistente.getEmail(),
          entidadeExistente.getTelefone(),
