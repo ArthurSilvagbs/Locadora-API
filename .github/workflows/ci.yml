@@ -8,6 +8,8 @@ jobs:
   build-and-test:
     name: Build e Testes
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     services:
       postgres:
         image: postgres:16
