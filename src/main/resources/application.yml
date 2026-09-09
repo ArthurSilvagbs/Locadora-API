@@ -11,8 +11,11 @@ spring: #sem valor lógico, apenas um agrupador de informações, um organizador
     password: locadora123
   jpa: # agrupador relacionando tudo que tem a ver com o jpa, inclusive o proprio hibernate. Difirente do datasource, ele diz o comportamento do hibernate com o banco
     hibernate: # o agrupador especifico do hibernate
-      ddl-auto: update # infere um comportamento em que o hibernate compara o estado atual do banco de dados, e do mapeamento, e se o mapeamento do java estiver "na frente", ele atualiza o banco pegando de referencia o mapeamento
+      ddl-auto: validate # infere um comportamento em que o hibernate compara o estado atual do banco de dados, e do mapeamento, e se o mapeamento do java estiver "na frente", ele atualiza o banco pegando de referencia o mapeamento
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 1

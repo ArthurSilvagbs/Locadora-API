@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.Length;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,8 +13,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import static io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo.DISPONIVEL;
 
 @Entity
 @Table(name = "veiculo")
@@ -27,11 +26,11 @@ public class Veiculo {
     private UUID idVeiculo;
 
     @Setter
-    @Column(length = 17, unique = true, nullable = false)
+    @Column(name = "numero_chassi", length = 17, unique = true, nullable = false)
     private String numeroChassi;
 
     @Setter
-    @Column(length = 7, unique = true, nullable = false)
+    @Column(name = "placa_veiculo", length = 7, unique = true, nullable = false)
     private String placaVeiculo;
 
     @Setter
@@ -51,7 +50,7 @@ public class Veiculo {
     private Integer ano;
 
     @Setter
-    @Column
+    @Column(length = 30)
     private String cor;
 
     @Setter

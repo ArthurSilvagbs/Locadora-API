@@ -20,7 +20,7 @@ public class Locacao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID idLocacao;
 
     @Setter
     @ManyToOne

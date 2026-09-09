@@ -19,7 +19,7 @@ public class ManutencaoMapper {
 
     public ManutencaoResponseDTO mapearParaResponse(Manutencao entidade) {
        return new ManutencaoResponseDTO(
-          entidade.getId(),
+          entidade.getIdManutencao(),
           entidade.getVeiculo(),
           entidade.getDataManutencao(),
           entidade.getDescricao(),
