@@ -3,6 +3,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -44,7 +45,34 @@ public class SecurityConfig {
          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
          .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auth/**").permitAll()
-            .anyRequest().authenticated())
+            //VeiculoController
+            .requestMatchers(HttpMethod.POST, "/veiculo").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.GET, "/veiculo/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/veiculo/**").hasAnyRole("ADMIN", "GERENTE")
+            //VeiculoController
+            //PessoaFisicaController
+            .requestMatchers(HttpMethod.POST, "/pessoa-fisica").authenticated()
+            .requestMatchers(HttpMethod.GET, "/pessoa-fisica/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.GET, "/pessoa-fisica/cpf/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/pessoa-fisica/**").hasAnyRole("ADMIN", "GERENTE")
+            //PessoaFisicaController
+            //PessoaJuridicaController
+            .requestMatchers(HttpMethod.POST, "/pessoa-juridica").authenticated()
+            .requestMatchers(HttpMethod.GET, "/pessoa-juridica/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.GET, "/pessoa-juridica/cnpj/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/pessoa-juridica/**").hasAnyRole("ADMIN", "GERENTE")
+            //PessoaJuridicaController
+            //FilialLocadoraController
+            .requestMatchers(HttpMethod.GET, "/filial-locadora/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/filial-locadora/**").hasAnyRole("ADMIN", "GERENTE")
+            //FilialLocadoraController
+            //ManutencaoController
+            .requestMatchers("/manutencao").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            //ManutencaoController
+            //LocacaoController
+            .requestMatchers("/locacao").authenticated()
+            //LocacaoController
+         )
          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
          .build();
    }
