@@ -67,10 +67,10 @@ public class SecurityConfig {
             .requestMatchers("/filial-locadora/**").hasAnyRole("ADMIN", "GERENTE")
             //FilialLocadoraController
             //ManutencaoController
-            .requestMatchers("/manutencao").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/manutencao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             //ManutencaoController
             //LocacaoController
-            .requestMatchers("/locacao").authenticated()
+            .requestMatchers("/locacao/**").authenticated()
             //LocacaoController
          )
          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
