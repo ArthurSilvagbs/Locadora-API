@@ -49,7 +49,7 @@ public class VeiculoController {
       return ResponseEntity.status(HttpStatus.OK).body(response);
    }
 
-   @GetMapping("/renavem/{renavam}")
+   @GetMapping("/renavam/{renavam}")
    public ResponseEntity<VeiculoResponseDTO> buscarVeiculoPorRenavam(
       @PathVariable String renavam
    ) {
@@ -96,7 +96,7 @@ public class VeiculoController {
    public ResponseEntity<Void> deletarVeiculoNumChassi(
       @PathVariable String numChassi
    ) {
-      service.deletarVeiculoViaId(numChassi);
+      service.deletarVeiculoViaNumChassi(numChassi);
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
    }
 }
