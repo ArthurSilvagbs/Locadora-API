@@ -1,10 +1,10 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record ConfirmarRetiradaDTO(
    @Positive(message = "A quilometragem deve ser positiva.")
-   @NotBlank(message = "Campo 'kmPreRetirada' é obrigatório.")
+   @NotNull(message = "Campo 'kmPreRetirada' é obrigatório.")
    Double kmPreRetirada
 ) {}

@@ -60,17 +60,20 @@ class AuthServiceTest {
 
       when(repository.findByEmail(dto.email())).thenReturn(Optional.empty());
       when(mapper.MapearParaUsuario(dto)).thenReturn(usuario);
+      when(passwordEncoder.encode(dto.senha())).thenReturn("senha-com-hash");
       when(jwtService.generateToken(any(UserDetailsImpl.class))).thenReturn("token-gerado");
 
       AuthResponseDTO resposta = service.registrar(dto);
 
       assertThat(resposta.token()).isEqualTo("token-gerado");
       verify(repository).save(usuario);
+      verify(passwordEncoder).encode(dto.senha());
+      assertThat(usuario.getSenha()).isEqualTo("senha-com-hash");
 
       ArgumentCaptor<UserDetailsImpl> userDetailsCaptor = ArgumentCaptor.forClass(UserDetailsImpl.class);
       verify(jwtService).generateToken(userDetailsCaptor.capture());
       assertThat(userDetailsCaptor.getValue().getUsername()).isEqualTo(dto.email());
-      assertThat(userDetailsCaptor.getValue().getPassword()).isEqualTo(dto.senha());
+      assertThat(userDetailsCaptor.getValue().getPassword()).isEqualTo("senha-com-hash");
    }
 
    @Test

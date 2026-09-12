@@ -72,6 +72,8 @@ public class SecurityConfig {
             //LocacaoController
             .requestMatchers("/locacao/**").authenticated()
             //LocacaoController
+            //Regra Final
+            .anyRequest().permitAll()
          )
          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
          .build();
