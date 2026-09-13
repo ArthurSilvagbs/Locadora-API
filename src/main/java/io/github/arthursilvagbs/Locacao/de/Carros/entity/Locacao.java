@@ -29,7 +29,7 @@ public class Locacao {
 
     @Setter
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "veiculo_id_veiculo")
     private Veiculo veiculo;
 
     @Setter
@@ -55,6 +55,10 @@ public class Locacao {
     private StatusLocacao statusLocacao;
 
     @Setter
+    @Enumerated(EnumType.STRING)
+    private CategoriaVeiculo categoriaVeiculo;
+
+    @Setter
     @Column(name = "km_retirada", precision = 2)
     private Double kmRetirada;
 
@@ -75,20 +79,22 @@ public class Locacao {
 
     public Locacao(
             Cliente cliente,
-            Veiculo veiculo,
             FilialLocadora filialRetirada,
             FilialLocadora filialDevolucao,
+            CategoriaVeiculo categoriaVeiculo,
             FormaPagamento formaPagamento,
             LocalDateTime dataRetirada,
-            LocalDateTime dataDevolucao
+            LocalDateTime dataDevolucao,
+            BigDecimal valorLocacao
     ) {
         this.cliente = cliente;
-        this.veiculo = veiculo;
         this.filialRetirada = filialRetirada;
         this.filialDevolucao = filialDevolucao;
         this.formaPagamento = formaPagamento;
+        this.categoriaVeiculo = categoriaVeiculo;
         this.dataRetirada = dataRetirada;
         this.dataDevolucao = dataDevolucao;
+        this.valorLocacao = valorLocacao;
         this.statusLocacao = StatusLocacao.PENDENTE_DE_RETIRADA;
     }
 }

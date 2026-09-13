@@ -29,8 +29,8 @@ public class AuthService {
       if (repository.findByEmail(dto.email()).isPresent()) {
          throw new RegistroDuplicadoException("Email já cadastrado.");
       }
-
       Usuario usuario = mapper.MapearParaUsuario(dto);
+      usuario.setSenha(passwordEncoder.encode(dto.senha()));
       repository.save(usuario);
       String token = jwtService.generateToken(new UserDetailsImpl(usuario));
       return new AuthResponseDTO(token);

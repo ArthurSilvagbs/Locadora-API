@@ -13,6 +13,7 @@ public record LocacaoResponseDTO(
         BigDecimal valorLocacao,
         FilialLocadora filialRetirada,
         FilialLocadora filialDevolucao,
+        CategoriaVeiculo categoriaVeiculo,
         FormaPagamento formaPagamento,
         StatusLocacao statusLocacao,
         LocalDateTime dataRetirada,

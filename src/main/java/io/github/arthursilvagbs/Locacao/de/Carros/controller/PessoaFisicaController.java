@@ -11,17 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-/*
-* Existem 4 anotations para cada verbo HTTP (GET, POST, PUT E DELETE):
-*
-* GET -> @GetMapping()
-* POST -> @PostMapping()
-* PUT -> @PutMapping()
-* DELETE -> @DeleteMapping()
-*
-*/
-
 @RestController
 @RequestMapping("/pessoa-fisica")
 @RequiredArgsConstructor
@@ -77,7 +66,7 @@ public class PessoaFisicaController {
       return ResponseEntity.status(HttpStatus.OK).body(response);
    }
 
-   @DeleteMapping("{id}")
+   @DeleteMapping("/{id}")
    public ResponseEntity<Void> deletarPessoaFisicaPorId(@PathVariable String id) {
       service.deletarPessoaFisicaPorId(id);
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

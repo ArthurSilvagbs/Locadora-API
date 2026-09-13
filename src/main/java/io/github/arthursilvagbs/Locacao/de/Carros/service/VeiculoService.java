@@ -1,8 +1,10 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
@@ -17,6 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -82,6 +88,23 @@ public class VeiculoService {
       return listaVeiculo.map(mapper::mapearParaResponse);
    }
 
+   @Transactional(readOnly = true)
+   public Page<VeiculoCategoriasDisponiveisResponseDTO> buscarCategoriaDisponiveisPorFilial(String idFilialLocadora, LocalDateTime dataRetirada, LocalDateTime dataDevolucao) {
+      UUID idFilial = UUID.fromString(idFilialLocadora);
+      Pageable pg = PageRequest.of(0, 10);
+
+      long diferenciaDias = ChronoUnit.DAYS.between(dataRetirada, dataDevolucao);
+
+      Page<CategoriaVeiculo> lista = repository.buscarCategoriasVeiculoPorFilial(idFilial, dataRetirada, dataDevolucao, pg);
+
+      return lista.map(categoria -> {
+         BigDecimal diaria = calculoDiariaPorCategoria(categoria);
+         BigDecimal valorLocacao = diaria.multiply(BigDecimal.valueOf(diferenciaDias));
+
+         return new VeiculoCategoriasDisponiveisResponseDTO(categoria, valorLocacao);
+      });
+   }
+
    @Transactional
    public VeiculoResponseDTO atualizarVeiculoPorId(VeiculoUpdateDTO dto, String id) {
       Veiculo veiculo = repository.findById(UUID.fromString(id))
@@ -128,6 +151,29 @@ public class VeiculoService {
       entidade.setQuilometragem(dto.quilometragem());
       entidade.setCor(dto.cor());
       entidade.setPlacaVeiculo(dto.placa());
+   }
+
+   private BigDecimal calculoDiariaPorCategoria(CategoriaVeiculo categoriaVeiculo) {
+      final double DIARIA_BASE = 120.00;
+      if (categoriaVeiculo == CategoriaVeiculo.HATCH) {
+         return BigDecimal.valueOf(DIARIA_BASE);
+      } else if (categoriaVeiculo == CategoriaVeiculo.SEDAN) {
+         return BigDecimal.valueOf(DIARIA_BASE * 1.3);
+      } else if (categoriaVeiculo == CategoriaVeiculo.PICK_UP) {
+         return BigDecimal.valueOf(DIARIA_BASE * 1.8);
+      } else if (categoriaVeiculo == CategoriaVeiculo.SUV) {
+         return BigDecimal.valueOf(DIARIA_BASE * 1.7);
+      } else if (categoriaVeiculo == CategoriaVeiculo.MINI_VAN) {
+         return BigDecimal.valueOf(DIARIA_BASE * 1.6);
+      } else if (categoriaVeiculo == CategoriaVeiculo.VAN) {
+         return BigDecimal.valueOf(DIARIA_BASE * 2.0);
+      } else if (categoriaVeiculo == CategoriaVeiculo.FURGAO) {
+         return BigDecimal.valueOf(DIARIA_BASE * 2.2);
+      } else if (categoriaVeiculo == CategoriaVeiculo.BLINDADO) {
+         return BigDecimal.valueOf(DIARIA_BASE * 3.0);
+      } else {
+         throw new EntidadeNaoEncontradaException("Erro ao calcular valor da diária do veículo. Categoria inválida.");
+      }
    }
 
 }

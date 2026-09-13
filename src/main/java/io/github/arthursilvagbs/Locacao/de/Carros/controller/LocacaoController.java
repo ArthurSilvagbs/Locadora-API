@@ -22,7 +22,7 @@ public class LocacaoController {
    public ResponseEntity<LocacaoResponseDTO> reservaLocacao(
       @Valid @RequestBody LocacaoCreateDTO dto
    ) {
-      LocacaoResponseDTO response = service.criarReservaDoVeiculo(dto);
+      LocacaoResponseDTO response = service.criarReservaDaCategoriaDeVeiculo(dto);
       return ResponseEntity.status(HttpStatus.CREATED).body(response);
    }
 
