@@ -393,6 +393,42 @@ public class VeiculoServiceTest {
    }
 
    // ---------------------------------------------------------------------
+   // MÉTODO: buscarCategoriaDisponiveisPorFilial
+   // ---------------------------------------------------------------------
+
+   @Test
+   @DisplayName("buscarCategoriaDisponiveisPorFilial deve retornar as categorias disponíveis da filial paginadas.")
+   void buscarCategoriaDisponiveisPorFilial_sucesso_retornaPaginaDeCategorias() {
+      UUID idFilialLocadora = UUID.randomUUID();
+      Pageable pageable = PageRequest.of(0, 10);
+      Page<CategoriaVeiculo> paginaEsperada = new PageImpl<>(
+         List.of(CategoriaVeiculo.HATCH, CategoriaVeiculo.SUV),
+         pageable,
+         2
+      );
+
+      when(repository.buscarCategoriasVeiculoPorFilial(idFilialLocadora, pageable))
+         .thenReturn(paginaEsperada);
+
+      Page<CategoriaVeiculo> resultado = service.buscarCategoriaDisponiveisPorFilial(
+         idFilialLocadora.toString()
+      );
+
+      assertThat(resultado).isSameAs(paginaEsperada);
+      assertThat(resultado.getContent()).containsExactly(CategoriaVeiculo.HATCH, CategoriaVeiculo.SUV);
+      verify(repository).buscarCategoriasVeiculoPorFilial(idFilialLocadora, pageable);
+   }
+
+   @Test
+   @DisplayName("buscarCategoriaDisponiveisPorFilial deve lançar exception quando o ID da filial é inválido.")
+   void buscarCategoriaDisponiveisPorFilial_idInvalido_lancaExcecao() {
+      assertThatThrownBy(() -> service.buscarCategoriaDisponiveisPorFilial("id-invalido"))
+         .isInstanceOf(IllegalArgumentException.class);
+
+      verifyNoInteractions(repository);
+   }
+
+   // ---------------------------------------------------------------------
    // MÉTODO: atualizarVeiculoPorId
    // ---------------------------------------------------------------------
 

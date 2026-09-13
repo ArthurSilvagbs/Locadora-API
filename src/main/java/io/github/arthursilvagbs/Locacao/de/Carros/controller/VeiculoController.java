@@ -3,9 +3,11 @@ package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.service.VeiculoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +57,11 @@ public class VeiculoController {
    ) {
       VeiculoResponseDTO response = service.buscarVeiculoPorRenavam(renavam);
       return ResponseEntity.status(HttpStatus.OK).body(response);
+   }
+
+   @GetMapping("/categorias-disponiveis-filial/{idFilial}")
+   public ResponseEntity<Page<CategoriaVeiculo>> buscarCategoriaDisponiveisPorFilial(@PathVariable String idFilial) {
+      return ResponseEntity.status(HttpStatus.OK).body(service.buscarCategoriaDisponiveisPorFilial(idFilial));
    }
 
    @PutMapping("/{id}")

@@ -3,6 +3,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.service;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
@@ -80,6 +81,13 @@ public class VeiculoService {
       Pageable pg = PageRequest.of(0, 10, Sort.by("marca"));
       Page<Veiculo> listaVeiculo = repository.findAll(pg);
       return listaVeiculo.map(mapper::mapearParaResponse);
+   }
+
+   @Transactional(readOnly = true)
+   public Page<CategoriaVeiculo> buscarCategoriaDisponiveisPorFilial(String idFilialLocadora) {
+      UUID idFilial = UUID.fromString(idFilialLocadora);
+      Pageable pg = PageRequest.of(0, 10);
+      return repository.buscarCategoriasVeiculoPorFilial(idFilial, pg);
    }
 
    @Transactional
