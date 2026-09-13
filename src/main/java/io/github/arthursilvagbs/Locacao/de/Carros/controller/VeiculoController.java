@@ -1,5 +1,6 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
@@ -8,9 +9,12 @@ import io.github.arthursilvagbs.Locacao.de.Carros.service.VeiculoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/veiculo")
@@ -60,8 +64,12 @@ public class VeiculoController {
    }
 
    @GetMapping("/categorias-disponiveis-filial/{idFilial}")
-   public ResponseEntity<Page<CategoriaVeiculo>> buscarCategoriaDisponiveisPorFilial(@PathVariable String idFilial) {
-      return ResponseEntity.status(HttpStatus.OK).body(service.buscarCategoriaDisponiveisPorFilial(idFilial));
+   public ResponseEntity<Page<VeiculoCategoriasDisponiveisResponseDTO>> buscarCategoriaDisponiveisPorFilial(
+      @PathVariable String idFilial,
+      @RequestBody @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime dataRetirada,
+      @RequestBody @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime dataDevolucao
+      ) {
+      return ResponseEntity.status(HttpStatus.OK).body(service.buscarCategoriaDisponiveisPorFilial(idFilial, dataRetirada, dataDevolucao));
    }
 
    @PutMapping("/{id}")

@@ -1,5 +1,6 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao;
 
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FormaPagamento;
 import jakarta.validation.constraints.NotNull;
@@ -9,18 +10,20 @@ import java.time.LocalDateTime;
 
 public record LocacaoUpdateDTO(
 
-
    @NotNull(message = "Campo 'valorLocacao' é obrigatório.")
    BigDecimal valorLocacao,
 
    @NotNull(message = "Campo 'filialRetirada' é obrigatório.")
-   FilialLocadora filialRetirada,
+   String idFilialRetirada,
 
    @NotNull(message = "Campo 'filialDevolucao' é obrigatório.")
-   FilialLocadora filialDevolucao,
+   String idFilialDevolucao,
 
    @NotNull(message = "Campo 'formaPagamento' é obrigatório.")
    FormaPagamento formaPagamento,
+
+   @NotNull(message = "Campo 'categoriaVeiculo' é obrigatório.")
+   CategoriaVeiculo categoriaVeiculo,
 
    @NotNull(message = "Campo 'dataRetirada' é obrigatório.")
    LocalDateTime dataRetirada,

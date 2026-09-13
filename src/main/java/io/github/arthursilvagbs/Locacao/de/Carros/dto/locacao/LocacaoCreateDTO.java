@@ -11,14 +11,14 @@ public record LocacaoCreateDTO(
    @NotBlank(message = "Campo 'clienteId' é obrigatório.")
    String clienteId,
 
-   @NotBlank(message = "Campo 'veiculoId' é obrigatório.")
-   String veiculoId,
-
    @NotBlank(message = "Campo 'filialRetiradaId' é obrigatório.")
    String filialRetiradaId,
 
    @NotBlank(message = "Campo 'filialDevolucaoId' é obrigatório.")
    String filialDevolucaoId,
+
+   @NotNull(message = "Campo 'categoriaVeiculo' é obrigatório.")
+   CategoriaVeiculo categoriaVeiculo,
 
    @NotNull(message = "Campo 'formaPagamento' é obrigatório.")
    FormaPagamento formaPagamento,

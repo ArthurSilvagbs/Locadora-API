@@ -23,6 +23,11 @@ public class GlobalExceptionHandler {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
    }
 
+   @ExceptionHandler(DadosIncompativeisException.class)
+   public ResponseEntity<String> handlerDadosIncompativeis(DadosIncompativeisException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+   }
+
    @ExceptionHandler(VeiculoNaoDisponivelException.class)
    public ResponseEntity<String> handlerVeiculoNaoDisponivel(VeiculoNaoDisponivelException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

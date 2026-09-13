@@ -1,5 +1,6 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -397,32 +400,70 @@ public class VeiculoServiceTest {
    // ---------------------------------------------------------------------
 
    @Test
-   @DisplayName("buscarCategoriaDisponiveisPorFilial deve retornar as categorias disponíveis da filial paginadas.")
-   void buscarCategoriaDisponiveisPorFilial_sucesso_retornaPaginaDeCategorias() {
+   @DisplayName("buscarCategoriaDisponiveisPorFilial deve retornar categorias com o valor calculado para o período.")
+   void buscarCategoriaDisponiveisPorFilial_sucesso_retornaPaginaDeCategoriasComValor() {
       UUID idFilialLocadora = UUID.randomUUID();
+      LocalDateTime dataRetirada = LocalDateTime.of(2026, 9, 20, 8, 0);
+      LocalDateTime dataDevolucao = LocalDateTime.of(2026, 9, 23, 8, 0);
       Pageable pageable = PageRequest.of(0, 10);
       Page<CategoriaVeiculo> paginaEsperada = new PageImpl<>(
-         List.of(CategoriaVeiculo.HATCH, CategoriaVeiculo.SUV),
+         List.of(
+            CategoriaVeiculo.HATCH,
+            CategoriaVeiculo.SEDAN,
+            CategoriaVeiculo.PICK_UP,
+            CategoriaVeiculo.SUV,
+            CategoriaVeiculo.MINI_VAN,
+            CategoriaVeiculo.VAN,
+            CategoriaVeiculo.FURGAO,
+            CategoriaVeiculo.BLINDADO
+         ),
          pageable,
-         2
+         8
       );
 
-      when(repository.buscarCategoriasVeiculoPorFilial(idFilialLocadora, pageable))
+      when(repository.buscarCategoriasVeiculoPorFilial(
+         idFilialLocadora,
+         dataRetirada,
+         dataDevolucao,
+         pageable
+      ))
          .thenReturn(paginaEsperada);
 
-      Page<CategoriaVeiculo> resultado = service.buscarCategoriaDisponiveisPorFilial(
-         idFilialLocadora.toString()
+      Page<VeiculoCategoriasDisponiveisResponseDTO> resultado = service.buscarCategoriaDisponiveisPorFilial(
+         idFilialLocadora.toString(),
+         dataRetirada,
+         dataDevolucao
       );
 
-      assertThat(resultado).isSameAs(paginaEsperada);
-      assertThat(resultado.getContent()).containsExactly(CategoriaVeiculo.HATCH, CategoriaVeiculo.SUV);
-      verify(repository).buscarCategoriasVeiculoPorFilial(idFilialLocadora, pageable);
+      assertThat(resultado.getContent()).containsExactly(
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.HATCH, BigDecimal.valueOf(360.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.SEDAN, BigDecimal.valueOf(468.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.PICK_UP, BigDecimal.valueOf(648.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.SUV, BigDecimal.valueOf(612.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.MINI_VAN, BigDecimal.valueOf(576.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.VAN, BigDecimal.valueOf(720.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.FURGAO, BigDecimal.valueOf(792.0)),
+         new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.BLINDADO, BigDecimal.valueOf(1080.0))
+      );
+      verify(repository).buscarCategoriasVeiculoPorFilial(
+         idFilialLocadora,
+         dataRetirada,
+         dataDevolucao,
+         pageable
+      );
    }
 
    @Test
    @DisplayName("buscarCategoriaDisponiveisPorFilial deve lançar exception quando o ID da filial é inválido.")
    void buscarCategoriaDisponiveisPorFilial_idInvalido_lancaExcecao() {
-      assertThatThrownBy(() -> service.buscarCategoriaDisponiveisPorFilial("id-invalido"))
+      LocalDateTime dataRetirada = LocalDateTime.of(2026, 9, 20, 8, 0);
+      LocalDateTime dataDevolucao = LocalDateTime.of(2026, 9, 23, 8, 0);
+
+      assertThatThrownBy(() -> service.buscarCategoriaDisponiveisPorFilial(
+         "id-invalido",
+         dataRetirada,
+         dataDevolucao
+      ))
          .isInstanceOf(IllegalArgumentException.class);
 
       verifyNoInteractions(repository);
