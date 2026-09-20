@@ -53,22 +53,23 @@ class AuthServiceTest {
    private AuthService service;
 
    @Test
-   @DisplayName("registrar deve salvar o usuário e retornar seu token quando o e-mail está disponível")
-   void registrar_emailDisponivel_salvaUsuarioERetornaToken() {
-      RegisterRequestDTO dto = new RegisterRequestDTO("ana@email.com", "senha-segura", Role.CLIENTE);
-      Usuario usuario = new Usuario(dto.email(), dto.senha(), dto.role());
+   @DisplayName("registrar cliente deve salvar o usuário com role CLIENTE e retornar seu token")
+   void registrarCliente_emailDisponivel_salvaUsuarioComRoleClienteERetornaToken() {
+      RegisterRequestDTO dto = new RegisterRequestDTO("ana@email.com", "senha-segura");
+      Usuario usuario = new Usuario(dto.email(), dto.senha());
 
       when(repository.findByEmail(dto.email())).thenReturn(Optional.empty());
       when(mapper.MapearParaUsuario(dto)).thenReturn(usuario);
       when(passwordEncoder.encode(dto.senha())).thenReturn("senha-com-hash");
       when(jwtService.generateToken(any(UserDetailsImpl.class))).thenReturn("token-gerado");
 
-      AuthResponseDTO resposta = service.registrar(dto);
+      AuthResponseDTO resposta = service.registrarCliente(dto);
 
       assertThat(resposta.token()).isEqualTo("token-gerado");
       verify(repository).save(usuario);
       verify(passwordEncoder).encode(dto.senha());
       assertThat(usuario.getSenha()).isEqualTo("senha-com-hash");
+      assertThat(usuario.getRoles()).isEqualTo(Role.CLIENTE);
 
       ArgumentCaptor<UserDetailsImpl> userDetailsCaptor = ArgumentCaptor.forClass(UserDetailsImpl.class);
       verify(jwtService).generateToken(userDetailsCaptor.capture());
@@ -77,12 +78,30 @@ class AuthServiceTest {
    }
 
    @Test
-   @DisplayName("registrar deve rejeitar e-mail já cadastrado sem mapear, salvar ou gerar token")
-   void registrar_emailJaCadastrado_lancaExcecao() {
-      RegisterRequestDTO dto = new RegisterRequestDTO("ana@email.com", "senha-segura", Role.CLIENTE);
+   @DisplayName("registrar funcionário deve salvar o usuário com role FUNCIONARIO e retornar seu token")
+   void registrarFuncionario_emailDisponivel_salvaUsuarioComRoleFuncionarioERetornaToken() {
+      RegisterRequestDTO dto = new RegisterRequestDTO("funcionario@email.com", "senha-segura");
+      Usuario usuario = new Usuario(dto.email(), dto.senha());
+
+      when(repository.findByEmail(dto.email())).thenReturn(Optional.empty());
+      when(mapper.MapearParaUsuario(dto)).thenReturn(usuario);
+      when(passwordEncoder.encode(dto.senha())).thenReturn("senha-com-hash");
+      when(jwtService.generateToken(any(UserDetailsImpl.class))).thenReturn("token-gerado");
+
+      AuthResponseDTO resposta = service.registrarFuncionario(dto);
+
+      assertThat(resposta.token()).isEqualTo("token-gerado");
+      assertThat(usuario.getRoles()).isEqualTo(Role.FUNCIONARIO);
+      verify(repository).save(usuario);
+   }
+
+   @Test
+   @DisplayName("registrar cliente deve rejeitar e-mail já cadastrado sem mapear, salvar ou gerar token")
+   void registrarCliente_emailJaCadastrado_lancaExcecao() {
+      RegisterRequestDTO dto = new RegisterRequestDTO("ana@email.com", "senha-segura");
       when(repository.findByEmail(dto.email())).thenReturn(Optional.of(new Usuario()));
 
-      assertThatThrownBy(() -> service.registrar(dto))
+      assertThatThrownBy(() -> service.registrarCliente(dto))
          .isInstanceOf(RegistroDuplicadoException.class)
          .hasMessage("Email já cadastrado.");
 
@@ -95,7 +114,8 @@ class AuthServiceTest {
    @DisplayName("login deve autenticar com e-mail e senha, e retornar o token do usuário")
    void login_credenciaisValidas_retornaToken() {
       LoginRequestDTO dto = new LoginRequestDTO("ana@email.com", "senha-segura");
-      Usuario usuario = new Usuario(dto.email(), dto.senha(), Role.CLIENTE);
+      Usuario usuario = new Usuario(dto.email(), dto.senha());
+      usuario.setRoles(Role.CLIENTE);
       when(repository.findByEmail(dto.email())).thenReturn(Optional.of(usuario));
       when(jwtService.generateToken(any(UserDetailsImpl.class))).thenReturn("token-gerado");
 

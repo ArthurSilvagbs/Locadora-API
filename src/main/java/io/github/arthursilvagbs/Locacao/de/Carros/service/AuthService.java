@@ -3,6 +3,7 @@ package io.github.arthursilvagbs.Locacao.de.Carros.service;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.auth.AuthResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.auth.LoginRequestDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.auth.RegisterRequestDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.Role;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Usuario;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.UsuarioMapper;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,17 +27,33 @@ public class AuthService {
    private final JwtService jwtService;
    private final AuthenticationManager authenticationManager;
 
-   public AuthResponseDTO registrar(RegisterRequestDTO dto) {
+   @Transactional
+   public AuthResponseDTO registrarCliente(RegisterRequestDTO dto) {
       if (repository.findByEmail(dto.email()).isPresent()) {
          throw new RegistroDuplicadoException("Email já cadastrado.");
       }
       Usuario usuario = mapper.MapearParaUsuario(dto);
+      usuario.setRoles(Role.CLIENTE);
       usuario.setSenha(passwordEncoder.encode(dto.senha()));
       repository.save(usuario);
       String token = jwtService.generateToken(new UserDetailsImpl(usuario));
       return new AuthResponseDTO(token);
    }
 
+   @Transactional
+   public AuthResponseDTO registrarFuncionario(RegisterRequestDTO dto) {
+      if (repository.findByEmail(dto.email()).isPresent()) {
+         throw new RegistroDuplicadoException("Email já cadastrado.");
+      }
+      Usuario usuario = mapper.MapearParaUsuario(dto);
+      usuario.setRoles(Role.FUNCIONARIO);
+      usuario.setSenha(passwordEncoder.encode(dto.senha()));
+      repository.save(usuario);
+      String token = jwtService.generateToken(new UserDetailsImpl(usuario));
+      return new AuthResponseDTO(token);
+   }
+
+   @Transactional
    public AuthResponseDTO login(LoginRequestDTO dto) {
       authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(dto.email(), dto.senha()));
 

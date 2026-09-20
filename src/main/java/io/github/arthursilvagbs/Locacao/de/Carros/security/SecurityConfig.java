@@ -45,7 +45,10 @@ public class SecurityConfig {
          .csrf(csrf -> csrf.disable())
          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
          .authorizeHttpRequests(auth -> auth
+            //AuthController
+            .requestMatchers("/auth/registrar-funcionario").hasAnyRole("ADMIN", "GERENTE")
             .requestMatchers("/auth/**").permitAll()
+            //AuthController
             //VeiculoController
             .requestMatchers(HttpMethod.POST, "/veiculo").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/veiculo/categorias-disponiveis-filial/**").permitAll()

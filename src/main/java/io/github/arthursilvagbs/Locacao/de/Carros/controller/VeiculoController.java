@@ -66,8 +66,8 @@ public class VeiculoController {
    @GetMapping("/categorias-disponiveis-filial/{idFilial}")
    public ResponseEntity<Page<VeiculoCategoriasDisponiveisResponseDTO>> buscarCategoriaDisponiveisPorFilial(
       @PathVariable String idFilial,
-      @RequestBody @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime dataRetirada,
-      @RequestBody @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)LocalDateTime dataDevolucao
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataRetirada,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataDevolucao
       ) {
       return ResponseEntity.status(HttpStatus.OK).body(service.buscarCategoriaDisponiveisPorFilial(idFilial, dataRetirada, dataDevolucao));
    }

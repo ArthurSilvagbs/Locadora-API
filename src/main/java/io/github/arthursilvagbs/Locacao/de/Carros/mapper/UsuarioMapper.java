@@ -10,8 +10,6 @@ public class UsuarioMapper {
    public Usuario MapearParaUsuario(RegisterRequestDTO dto) {
       return new Usuario(
          dto.email(),
-         dto.senha(),
-         dto.role()
-      );
+         dto.senha());
    }
 }
