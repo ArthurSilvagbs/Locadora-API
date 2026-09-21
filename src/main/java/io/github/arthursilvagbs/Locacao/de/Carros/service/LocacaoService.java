@@ -117,16 +117,18 @@ public class LocacaoService {
       Locacao locacao = repository.findById(UUID.fromString(locacaoId))
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
 
-      if (locacao.getStatusLocacao() == StatusLocacao.CANCELADA) {
+      if (locacao.getStatusLocacao().equals(StatusLocacao.CANCELADA)) {
          throw new StatusInvalidoException("A locação já está com o status 'CANCELADA'.");
       }
-      if (locacao.getStatusLocacao() != StatusLocacao.PENDENTE_DE_RETIRADA) {
+      if (!locacao.getStatusLocacao().equals(StatusLocacao.PENDENTE_DE_RETIRADA)) {
          throw new StatusInvalidoException("Status de locação inválido.");
       }
 
-      Veiculo veiculo = locacao.getVeiculo();
-      veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
-      veiculoRepository.save(veiculo);
+      if (locacao.getVeiculo() != null) {
+         Veiculo veiculo = locacao.getVeiculo();
+         veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
+         veiculoRepository.save(veiculo);
+      }
 
       locacao.setStatusLocacao(StatusLocacao.CANCELADA);
       Locacao locacaoAtualizada = repository.save(locacao);

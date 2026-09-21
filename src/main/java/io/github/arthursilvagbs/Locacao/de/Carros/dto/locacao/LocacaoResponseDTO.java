@@ -8,11 +8,11 @@ import java.util.UUID;
 
 public record LocacaoResponseDTO(
         UUID id,
-        Cliente cliente,
-        Veiculo veiculo,
+        String idCliente,
+        String idVeiculo,
         BigDecimal valorLocacao,
-        FilialLocadora filialRetirada,
-        FilialLocadora filialDevolucao,
+        String idFilialRetirada,
+        String idFilialDevolucao,
         CategoriaVeiculo categoriaVeiculo,
         FormaPagamento formaPagamento,
         StatusLocacao statusLocacao,

@@ -31,13 +31,30 @@ public class LocacaoMapper {
     }
 
     public LocacaoResponseDTO mapearParaResponse(Locacao entidade) {
+
+       if (entidade.getVeiculo() == null) {
+          return new LocacaoResponseDTO(
+             entidade.getIdLocacao(),
+             entidade.getCliente().getIdCliente().toString(),
+             null,
+             entidade.getValorLocacao(),
+             entidade.getFilialRetirada().getIdLocadora().toString(),
+             entidade.getFilialDevolucao().getIdLocadora().toString(),
+             entidade.getCategoriaVeiculo(),
+             entidade.getFormaPagamento(),
+             entidade.getStatusLocacao(),
+             entidade.getDataRetirada(),
+             entidade.getDataDevolucao()
+          );
+       }
+
        return new LocacaoResponseDTO(
           entidade.getIdLocacao(),
-          entidade.getCliente(),
-          entidade.getVeiculo(),
+          entidade.getCliente().getIdCliente().toString(),
+          entidade.getVeiculo().getIdVeiculo().toString(),
           entidade.getValorLocacao(),
-          entidade.getFilialRetirada(),
-          entidade.getFilialDevolucao(),
+          entidade.getFilialRetirada().getIdLocadora().toString(),
+          entidade.getFilialDevolucao().getIdLocadora().toString(),
           entidade.getCategoriaVeiculo(),
           entidade.getFormaPagamento(),
           entidade.getStatusLocacao(),

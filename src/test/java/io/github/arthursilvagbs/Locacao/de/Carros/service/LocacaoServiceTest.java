@@ -280,6 +280,74 @@ class LocacaoServiceTest {
     }
 
     @Test
+    void cancelarLocacao_pendenteSemVeiculo_cancelaReservaSemAlterarVeiculo() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        LocacaoResponseDTO resposta = respostaDe(locacao);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+        when(repository.save(locacao)).thenReturn(locacao);
+        when(mapper.mapearParaResponse(locacao)).thenReturn(resposta);
+
+        LocacaoResponseDTO resultado = service.cancelarLocacao(locacaoId.toString());
+
+        assertThat(resultado).isEqualTo(resposta);
+        assertThat(locacao.getStatusLocacao()).isEqualTo(StatusLocacao.CANCELADA);
+        verify(repository).save(locacao);
+        verifyNoInteractions(veiculoRepository);
+    }
+
+    @Test
+    void cancelarLocacao_jaCancelada_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        locacao.setStatusLocacao(StatusLocacao.CANCELADA);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.cancelarLocacao(locacaoId.toString()))
+            .isInstanceOf(StatusInvalidoException.class)
+            .hasMessage("A locação já está com o status 'CANCELADA'.");
+
+        verify(repository, never()).save(locacao);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
+    void cancelarLocacao_retirada_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        locacao.setStatusLocacao(StatusLocacao.RETIRADO);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.cancelarLocacao(locacaoId.toString()))
+            .isInstanceOf(StatusInvalidoException.class)
+            .hasMessage("Status de locação inválido.");
+
+        verify(repository, never()).save(locacao);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
     void calculoDiariaPorCategoria_calculaDiariaParaTodasAsCategorias() {
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.HATCH)).isEqualByComparingTo("120.0");
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.SEDAN)).isEqualByComparingTo("156.0");
@@ -326,11 +394,11 @@ class LocacaoServiceTest {
     private LocacaoResponseDTO respostaDe(Locacao locacao) {
         return new LocacaoResponseDTO(
             UUID.randomUUID(),
-            locacao.getCliente(),
-            locacao.getVeiculo(),
+            UUID.randomUUID().toString(),
+            locacao.getVeiculo() == null ? null : UUID.randomUUID().toString(),
             locacao.getValorLocacao(),
-            locacao.getFilialRetirada(),
-            locacao.getFilialDevolucao(),
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
             locacao.getCategoriaVeiculo(),
             locacao.getFormaPagamento(),
             locacao.getStatusLocacao(),
