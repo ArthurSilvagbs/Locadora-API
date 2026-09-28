@@ -3,10 +3,10 @@ package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaFisica.PessoaFisicaUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.service.PessoaFisicaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +46,22 @@ public class PessoaFisicaController {
    public ResponseEntity<Page<PessoaFisicaResponseDTO>> buscarTodosPaginado() {
       Page<PessoaFisicaResponseDTO> responsePaginado = service.buscarTodosPaginado();
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginado);
+   }
+
+   @GetMapping("locacoes/{idCliente}")
+   public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacaoesPorPessoaFisicaId(
+      @PathVariable("idCliente") String idCliente
+   ) {
+      Page<LocacaoResponseDTO> responsePaginada = service.buscarLocacoesClientePorId(idCliente);
+      return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
+   }
+
+   @GetMapping("locacoes/{cpf}")
+   public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacoesPorPessoaFisicaCpf(
+      @PathVariable("cpf") String cpf
+   ) {
+      Page<LocacaoResponseDTO> responsePaginada = service.buscarLocacoesClientePorCpf(cpf);
+      return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
    }
 
    @PutMapping("/{id}")

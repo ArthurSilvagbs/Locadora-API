@@ -1,6 +1,7 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.exceptions;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -30,6 +31,11 @@ public class GlobalExceptionHandler {
 
    @ExceptionHandler(VeiculoNaoDisponivelException.class)
    public ResponseEntity<String> handlerVeiculoNaoDisponivel(VeiculoNaoDisponivelException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+   }
+
+   @ExceptionHandler(ClienteSemLocacoesRegistradasException.class)
+   public ResponseEntity<String> handlerClienteSemLocacoesRegistradas(ClienteSemLocacoesRegistradasException e) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
    }
 

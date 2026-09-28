@@ -3,6 +3,8 @@ package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.Locacao;
 import io.github.arthursilvagbs.Locacao.de.Carros.service.PessoaJuridicaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,22 @@ public class PessoaJuridicaController {
    @GetMapping
    public ResponseEntity<Page<PessoaJuridicaResponseDTO>> buscarTodosPaginado() {
       Page<PessoaJuridicaResponseDTO> responsePaginada = service.buscarTodosPaginado();
+      return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
+   }
+
+   @GetMapping("/locacoes/{idCliente}")
+   public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacoesPorPessoaJuridicaId(
+      @PathVariable("idCliente") String idCliente
+   ) {
+      Page<LocacaoResponseDTO> responsePaginada = service.buscarLocacoesClientePorId(idCliente);
+      return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
+   }
+
+   @GetMapping("/locacoes/{cnpj}")
+   public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacoesPorPessoaJuridicaCnpj(
+      @PathVariable("cnpj") String cnpj
+   ) {
+      Page<LocacaoResponseDTO> responsePaginada = service.buscarLocacoesClientePorCnpj(cnpj);
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
    }
 

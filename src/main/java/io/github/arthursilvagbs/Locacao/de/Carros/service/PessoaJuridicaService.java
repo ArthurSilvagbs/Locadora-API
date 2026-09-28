@@ -3,9 +3,13 @@ package io.github.arthursilvagbs.Locacao.de.Carros.service;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.cliente.pessoaJuridica.PessoaJuridicaUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.Locacao;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.PessoaJuridica;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.ClienteSemLocacoesRegistradasException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
+import io.github.arthursilvagbs.Locacao.de.Carros.mapper.LocacaoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.PessoaJuridicaMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.PessoaJuridicaRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +25,10 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PessoaJuridicaService {
+
    private final PessoaJuridicaRepository repository;
    private final PessoaJuridicaMapper mapper;
+   private final LocacaoMapper locacaoMapper;
 
    @Transactional
    public PessoaJuridicaResponseDTO criarPessoaJuridica(PessoaJuridicaCreateDTO dto) {
@@ -55,6 +61,40 @@ public class PessoaJuridicaService {
       Pageable pg = PageRequest.of(0, 10, Sort.by("cnpj").ascending());
       Page<PessoaJuridica> listaPessoaJuridica = repository.findAll(pg);
       return listaPessoaJuridica.map(mapper::mapearParaResponse);
+   }
+
+   @Transactional(readOnly = true)
+   public Page<LocacaoResponseDTO> buscarLocacoesClientePorId(String id) {
+      Pageable pg = PageRequest.of(0, 10, Sort.by("dataRetirada").descending());
+
+      if (!repository.existsById(UUID.fromString(id))) {
+         throw new EntidadeNaoEncontradaException("Cliente com o ID indicado não encontrado.");
+      }
+
+      Page<Locacao> listaLocacoes = repository.buscarLocacoesPorId(UUID.fromString(id), pg);
+
+      if (listaLocacoes.isEmpty()) {
+         throw new ClienteSemLocacoesRegistradasException("Nenhuma locação deste cliente foi encontrada.");
+      }
+
+      return listaLocacoes.map(locacaoMapper::mapearParaResponse);
+   }
+
+   @Transactional(readOnly = true)
+   public Page<LocacaoResponseDTO> buscarLocacoesClientePorCnpj(String cnpj) {
+      Pageable pg = PageRequest.of(0, 10, Sort.by("dataRetirada").descending());
+
+      if(!repository.existsByCnpj(cnpj)) {
+         throw new EntidadeNaoEncontradaException("Cliente com o CNPJ indicado não encontrado.");
+      }
+
+      Page<Locacao> listaLocacoes = repository.buscarLocacaoPorCnpj(cnpj, pg);
+
+      if (listaLocacoes.isEmpty()) {
+         throw new ClienteSemLocacoesRegistradasException("Nenhuma locação deste cliente foi encontrada.");
+      }
+
+      return listaLocacoes.map(locacaoMapper::mapearParaResponse);
    }
 
    @Transactional
