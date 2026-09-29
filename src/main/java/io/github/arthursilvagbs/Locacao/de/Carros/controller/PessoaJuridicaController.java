@@ -50,7 +50,7 @@ public class PessoaJuridicaController {
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
    }
 
-   @GetMapping("/locacoes/{idCliente}")
+   @GetMapping("/locacoes/id/{idCliente}")
    public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacoesPorPessoaJuridicaId(
       @PathVariable("idCliente") String idCliente
    ) {
@@ -58,7 +58,7 @@ public class PessoaJuridicaController {
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginada);
    }
 
-   @GetMapping("/locacoes/{cnpj}")
+   @GetMapping("/locacoes/cnpj/{cnpj}")
    public ResponseEntity<Page<LocacaoResponseDTO>> buscarLocacoesPorPessoaJuridicaCnpj(
       @PathVariable("cnpj") String cnpj
    ) {

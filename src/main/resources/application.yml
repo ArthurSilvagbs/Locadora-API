@@ -24,3 +24,7 @@ spring: #sem valor lógico, apenas um agrupador de informações, um organizador
       fail-on-unknown-properties: true
 jwt:
   secret: ${JWT_SECRET}
+springdoc:
+  swagger-ui:
+    operations-sorter: method
+    tags-sorter: alpha

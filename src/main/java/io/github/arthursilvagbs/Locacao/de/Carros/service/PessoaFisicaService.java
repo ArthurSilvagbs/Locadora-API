@@ -87,7 +87,7 @@ public class PessoaFisicaService {
       Pageable pg = PageRequest.of(0, 10, Sort.by("dataRetirada").descending());
 
       if (!repository.existsByCpf(cpf)) {
-         throw new EntidadeNaoEncontradaException("Nenhuma locação deste cliente encontrada.");
+         throw new EntidadeNaoEncontradaException("Cliente não encontrado.");
       }
 
       Page<Locacao> listaLocacoes = repository.buscarLocacoesPorCpf(cpf, pg);
@@ -127,7 +127,7 @@ public class PessoaFisicaService {
    // METODOS AUXILIARES
    private void atualizarAtributosPessoaFisica(PessoaFisica entidade, PessoaFisicaUpdateDTO dto) {
       entidade.setEmail(dto.email());
-      entidade.setEmail(dto.email());
+      entidade.setTelefone(dto.telefone());
       entidade.setEndereco(dto.email());
    }
 }

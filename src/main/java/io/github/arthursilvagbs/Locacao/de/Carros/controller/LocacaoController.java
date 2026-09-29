@@ -26,6 +26,12 @@ public class LocacaoController {
       return ResponseEntity.status(HttpStatus.CREATED).body(response);
    }
 
+   @GetMapping("/{id}")
+   public ResponseEntity<LocacaoResponseDTO> buscarLocacaoPorId(@PathVariable("id") String id) {
+      LocacaoResponseDTO response = service.buscarLocacaoPorId(id);
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+   }
+
    @PutMapping("/retirada/{id}")
    public ResponseEntity<LocacaoResponseDTO> confirmarRetirada(
       @Valid @RequestBody ConfirmarRetiradaDTO dto,
@@ -44,7 +50,7 @@ public class LocacaoController {
       return ResponseEntity.status(HttpStatus.OK).body(response);
    }
 
-   @PutMapping("/{id}")
+   @PutMapping("cancelar/{id}")
    public ResponseEntity<LocacaoResponseDTO> cancelarLocacao(
       @PathVariable String id
    ) {

@@ -136,6 +136,13 @@ public class LocacaoService {
       return mapper.mapearParaResponse(locacaoAtualizada);
    }
 
+   @Transactional(readOnly = true)
+   public LocacaoResponseDTO buscarLocacaoPorId(String id) {
+      Locacao locacao = repository.findById(UUID.fromString(id))
+         .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
+      return mapper.mapearParaResponse(locacao);
+   }
+
    protected BigDecimal calculoDiariaPorCategoria(CategoriaVeiculo categoriaVeiculo) {
       final double DIARIA_BASE = 120.00;
       if (categoriaVeiculo == CategoriaVeiculo.HATCH) {
