@@ -348,6 +348,55 @@ class LocacaoServiceTest {
     }
 
     @Test
+    void buscarLocacaoPorId_existente_retornaDTO() {
+        UUID id = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(), criarFilial(), CategoriaVeiculo.HATCH, BigDecimal.valueOf(360)
+        );
+        LocacaoResponseDTO resposta = respostaDe(locacao);
+        when(repository.findById(id)).thenReturn(Optional.of(locacao));
+        when(mapper.mapearParaResponse(locacao)).thenReturn(resposta);
+
+        assertThat(service.buscarLocacaoPorId(id.toString())).isEqualTo(resposta);
+        verify(mapper).mapearParaResponse(locacao);
+    }
+
+    @Test
+    void buscarLocacaoPorId_inexistente_lancaExcecao() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.buscarLocacaoPorId(id.toString()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class)
+            .hasMessage("Locação não encontrada.");
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void confirmarDevolucao_locacaoNaoRetirada_lancaExcecaoSemAlterarVeiculo() {
+        UUID id = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(), criarFilial(), CategoriaVeiculo.HATCH, BigDecimal.valueOf(360)
+        );
+        when(repository.findById(id)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.confirmarDevolucao(new ConfirmarDevolucaoDTO(25.0), id.toString()))
+            .isInstanceOf(StatusInvalidoException.class);
+        verifyNoInteractions(veiculoRepository, mapper);
+        verify(repository, never()).save(locacao);
+    }
+
+    @Test
+    void confirmarRetirada_locacaoInexistente_lancaExcecao() {
+        UUID id = UUID.randomUUID();
+        assertThatThrownBy(() -> service.confirmarRetirada(new ConfirmarRetiradaDTO(UUID.randomUUID().toString()), id.toString()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
     void calculoDiariaPorCategoria_calculaDiariaParaTodasAsCategorias() {
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.HATCH)).isEqualByComparingTo("120.0");
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.SEDAN)).isEqualByComparingTo("156.0");

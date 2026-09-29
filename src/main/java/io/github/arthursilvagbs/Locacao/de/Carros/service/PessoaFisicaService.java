@@ -128,6 +128,6 @@ public class PessoaFisicaService {
    private void atualizarAtributosPessoaFisica(PessoaFisica entidade, PessoaFisicaUpdateDTO dto) {
       entidade.setEmail(dto.email());
       entidade.setTelefone(dto.telefone());
-      entidade.setEndereco(dto.email());
+      entidade.setEndereco(dto.endereco());
    }
 }

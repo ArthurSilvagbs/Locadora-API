@@ -111,6 +111,20 @@ class AuthServiceTest {
    }
 
    @Test
+   void registrarFuncionario_emailJaCadastrado_naoSalvaNemGeraToken() {
+      RegisterRequestDTO dto = new RegisterRequestDTO("funcionario@email.com", "senha-segura");
+      when(repository.findByEmail(dto.email())).thenReturn(Optional.of(new Usuario()));
+
+      assertThatThrownBy(() -> service.registrarFuncionario(dto))
+         .isInstanceOf(RegistroDuplicadoException.class)
+         .hasMessage("Email já cadastrado.");
+
+      verify(mapper, never()).MapearParaUsuario(any());
+      verify(repository, never()).save(any());
+      verify(jwtService, never()).generateToken(any());
+   }
+
+   @Test
    @DisplayName("login deve autenticar com e-mail e senha, e retornar o token do usuário")
    void login_credenciaisValidas_retornaToken() {
       LoginRequestDTO dto = new LoginRequestDTO("ana@email.com", "senha-segura");

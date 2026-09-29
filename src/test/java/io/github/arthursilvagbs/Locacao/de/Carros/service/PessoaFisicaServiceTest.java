@@ -235,6 +235,9 @@ class PessoaFisicaServiceTest {
       PessoaFisicaResponseDTO resultado = service.atualizarPessoaFisicaPorId(dtoAtualizacao, id.toString());
 
       assertThat(resultado).isEqualTo(responseEsperado);
+      assertThat(entidadeExistente.getEmail()).isEqualTo(dtoAtualizacao.email());
+      assertThat(entidadeExistente.getTelefone()).isEqualTo(dtoAtualizacao.telefone());
+      assertThat(entidadeExistente.getEndereco()).isEqualTo(dtoAtualizacao.endereco());
 
       verify(repository, times(1)).save(entidadeExistente);
    }
@@ -271,9 +274,9 @@ class PessoaFisicaServiceTest {
       PessoaFisica entidade = new PessoaFisica(
          "Arthur Silva",
          "arthur@email.com",
-         cpf,
+         "11999999999",
          "Rua A, 123",
-         "12345678900"
+         cpf
       );
       PessoaFisicaUpdateDTO updateDto = new PessoaFisicaUpdateDTO(
          "arthursilva@email.com",
@@ -283,9 +286,9 @@ class PessoaFisicaServiceTest {
       PessoaFisicaResponseDTO responseEsperado = new PessoaFisicaResponseDTO(
          UUID.randomUUID(),
          entidade.getNome(),
-         entidade.getEmail(),
-         entidade.getTelefone(),
-         entidade.getEndereco(),
+         updateDto.email(),
+         updateDto.telefone(),
+         updateDto.endereco(),
          entidade.getCpf(),
          entidade.getCreatedAt()
       );
@@ -296,8 +299,22 @@ class PessoaFisicaServiceTest {
       PessoaFisicaResponseDTO resultado = service.atualizarPessoaFisicaPorCpf(updateDto, cpf);
 
       assertThat(responseEsperado).isEqualTo(resultado);
+      assertThat(entidade.getEmail()).isEqualTo(updateDto.email());
+      assertThat(entidade.getTelefone()).isEqualTo(updateDto.telefone());
+      assertThat(entidade.getEndereco()).isEqualTo(updateDto.endereco());
 
       verify(repository, times(1)).save(entidade);
+   }
+
+   @Test
+   void atualizarPessoaFisicaPorCpf_cpfInexistente_lancaExcecaoSemSalvar() {
+      String cpf = "52998224725";
+      PessoaFisicaUpdateDTO dto = new PessoaFisicaUpdateDTO("novo@email.com", "11988887777", "Rua Nova");
+      when(repository.findByCpf(cpf)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> service.atualizarPessoaFisicaPorCpf(dto, cpf))
+         .isInstanceOf(EntidadeNaoEncontradaException.class);
+      verify(repository, never()).save(any());
    }
 
    // ---------------------------------------------------------------------
