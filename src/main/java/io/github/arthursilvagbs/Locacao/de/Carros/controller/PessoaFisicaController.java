@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/pessoa-fisica")
 @RequiredArgsConstructor
@@ -70,7 +71,8 @@ public class PessoaFisicaController {
          content = @Content(
             mediaType = "application/json",
             schema = @Schema(implementation = ErrorResponse.class),
-            examples = @ExampleObject(value = """
+            examples = {
+               @ExampleObject(value = """
                {
                  "status": 409,
                  "error": "CONFLICT",
@@ -78,7 +80,17 @@ public class PessoaFisicaController {
                  "path": "/pessoa-fisica",
                  "timestamp": "2026-09-29T12:40:00"
                }
+               """),
+               @ExampleObject(value = """
+               {
+                 "status": 409,
+                 "error": "CONFLICT",
+                 "message": "Email já cadastrado.",
+                 "path": "/pessoa-fisica",
+                 "timestamp": "2026-09-29T12:40:00"
+               }
                """)
+            }
          )
       )
    })
