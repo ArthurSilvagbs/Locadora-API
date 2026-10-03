@@ -21,10 +21,7 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, UUID> {
    Optional<Veiculo> findByPlacaVeiculo(String placa);
    Optional<Veiculo> findByRenavam(String renavam);
 
-
-   // A ocupação só aumenta no início de uma reserva. Para reservas já em andamento,
-   // avaliamos o início do período solicitado. Intervalos são [retirada, devolução).
-   String CATEGORIAS_DISPONIVEIS = """
+   @Query(value = """
       SELECT DISTINCT v.categoriaVeiculo
       FROM Veiculo v
       WHERE v.filialAtual.idLocadora = :idFilialLocadora
@@ -55,12 +52,44 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, UUID> {
             AND frota.categoriaVeiculo = v.categoriaVeiculo
          )
       )
-      """;
-
-   @Query(value = CATEGORIAS_DISPONIVEIS + " ORDER BY v.categoriaVeiculo",
-      countQuery = "SELECT COUNT(DISTINCT total.categoriaVeiculo) " +
-         "FROM Veiculo total WHERE total.filialAtual.idLocadora = :idFilialLocadora " +
-         "AND total.categoriaVeiculo IN (" + CATEGORIAS_DISPONIVEIS + ")")
+      ORDER BY v.categoriaVeiculo
+      """, countQuery = """
+      SELECT COUNT(DISTINCT total.categoriaVeiculo)
+      FROM Veiculo total
+      WHERE total.filialAtual.idLocadora = :idFilialLocadora
+      AND total.categoriaVeiculo IN (
+         SELECT DISTINCT v.categoriaVeiculo
+         FROM Veiculo v
+         WHERE v.filialAtual.idLocadora = :idFilialLocadora
+         AND NOT EXISTS (
+            SELECT marco.idLocacao
+            FROM Locacao marco
+            WHERE marco.filialRetirada.idLocadora = :idFilialLocadora
+            AND marco.categoriaVeiculo = v.categoriaVeiculo
+            AND marco.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+            AND marco.dataRetirada < :dataDevolucao
+            AND marco.dataDevolucao > :dataRetirada
+            AND (
+               SELECT COUNT(l)
+               FROM Locacao l
+               WHERE l.filialRetirada.idLocadora = :idFilialLocadora
+               AND l.categoriaVeiculo = v.categoriaVeiculo
+               AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+               AND l.dataRetirada <= CASE
+                  WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+                  ELSE marco.dataRetirada END
+               AND l.dataDevolucao > CASE
+                  WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+                  ELSE marco.dataRetirada END
+            ) >= (
+               SELECT COUNT(frota)
+               FROM Veiculo frota
+               WHERE frota.filialAtual.idLocadora = :idFilialLocadora
+               AND frota.categoriaVeiculo = v.categoriaVeiculo
+            )
+         )
+      )
+      """)
    Page<CategoriaVeiculo> buscarCategoriasVeiculoPorFilialPaginado(
       @Param("idFilialLocadora") UUID idFilialLocadora,
       @Param("dataRetirada") LocalDateTime dataRetirada,
@@ -68,8 +97,39 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, UUID> {
       Pageable pageable
    );
 
-
-   @Query(CATEGORIAS_DISPONIVEIS + " ORDER BY v.categoriaVeiculo")
+   @Query("""
+      SELECT DISTINCT v.categoriaVeiculo
+      FROM Veiculo v
+      WHERE v.filialAtual.idLocadora = :idFilialLocadora
+      AND NOT EXISTS (
+         SELECT marco.idLocacao
+         FROM Locacao marco
+         WHERE marco.filialRetirada.idLocadora = :idFilialLocadora
+         AND marco.categoriaVeiculo = v.categoriaVeiculo
+         AND marco.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+         AND marco.dataRetirada < :dataDevolucao
+         AND marco.dataDevolucao > :dataRetirada
+         AND (
+            SELECT COUNT(l)
+            FROM Locacao l
+            WHERE l.filialRetirada.idLocadora = :idFilialLocadora
+            AND l.categoriaVeiculo = v.categoriaVeiculo
+            AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+            AND l.dataRetirada <= CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+            AND l.dataDevolucao > CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+         ) >= (
+            SELECT COUNT(frota)
+            FROM Veiculo frota
+            WHERE frota.filialAtual.idLocadora = :idFilialLocadora
+            AND frota.categoriaVeiculo = v.categoriaVeiculo
+         )
+      )
+      ORDER BY v.categoriaVeiculo
+      """)
    List<CategoriaVeiculo> buscarCategoriasVeiculoPorFilial(
       @Param("idFilialLocadora") UUID idFilialLocadora,
       @Param("dataRetirada") LocalDateTime dataRetirada,
