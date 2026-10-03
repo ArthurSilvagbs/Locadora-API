@@ -95,7 +95,7 @@ public class VeiculoService {
 
       long diferenciaDias = ChronoUnit.DAYS.between(dataRetirada, dataDevolucao);
 
-      Page<CategoriaVeiculo> lista = repository.buscarCategoriasVeiculoPorFilial(idFilial, dataRetirada, dataDevolucao, pg);
+      Page<CategoriaVeiculo> lista = repository.buscarCategoriasVeiculoPorFilialPaginado(idFilial, dataRetirada, dataDevolucao, pg);
 
       return lista.map(categoria -> {
          BigDecimal diaria = calculoDiariaPorCategoria(categoria);

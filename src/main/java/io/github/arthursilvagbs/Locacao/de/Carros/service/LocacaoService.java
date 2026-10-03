@@ -53,6 +53,18 @@ public class LocacaoService {
          valorLocacao
       );
       locacao.setStatusLocacao(StatusLocacao.PENDENTE_DE_RETIRADA);
+
+      var categoriasDisponiveis =
+         veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(),
+            dto.dataRetirada(),
+            dto.dataDevolucao()
+         );
+
+      if (!categoriasDisponiveis.contains(dto.categoriaVeiculo())) {
+         throw new DadosIncompativeisException("Categoria indisponível nesta filial para o período informado.");
+      }
+
       Locacao locacaoAtualizada = repository.save(locacao);
 
       return mapper.mapearParaResponse(locacaoAtualizada);

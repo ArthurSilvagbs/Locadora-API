@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -80,6 +81,9 @@ class LocacaoServiceTest {
         when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
         when(filialLocadoraRepository.findById(filialRetiradaId)).thenReturn(Optional.of(filialRetirada));
         when(filialLocadoraRepository.findById(filialDevolucaoId)).thenReturn(Optional.of(filialDevolucao));
+        when(veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(), dataRetirada, dataDevolucao))
+            .thenReturn(List.of(CategoriaVeiculo.HATCH));
         when(mapper.mapearParaLocacao(dto, cliente, filialRetirada, filialDevolucao, CategoriaVeiculo.HATCH, valorLocacao))
             .thenReturn(locacao);
         when(repository.save(locacao)).thenReturn(locacao);
@@ -93,7 +97,44 @@ class LocacaoServiceTest {
         assertThat(locacao.getValorLocacao()).isEqualByComparingTo(valorLocacao);
         assertThat(locacao.getStatusLocacao()).isEqualTo(StatusLocacao.PENDENTE_DE_RETIRADA);
         verify(repository).save(locacao);
-        verifyNoInteractions(veiculoRepository);
+        verify(veiculoRepository).buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(), dataRetirada, dataDevolucao);
+    }
+
+    @Test
+    void criarReservaDaCategoriaDeVeiculo_semCategoriasDisponiveis_naoSalva() {
+        verificarReservaIndisponivel(List.of());
+    }
+
+    @Test
+    void criarReservaDaCategoriaDeVeiculo_apenasOutraCategoriaDisponivel_naoSalva() {
+        verificarReservaIndisponivel(List.of(CategoriaVeiculo.SUV));
+    }
+
+    private void verificarReservaIndisponivel(List<CategoriaVeiculo> categoriasDisponiveis) {
+        UUID clienteId = UUID.randomUUID();
+        UUID filialId = UUID.randomUUID();
+        FilialLocadora filial = criarFilial();
+        Cliente cliente = new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1");
+        LocacaoCreateDTO dto = new LocacaoCreateDTO(
+            clienteId.toString(), filialId.toString(), filialId.toString(),
+            CategoriaVeiculo.HATCH, FormaPagamento.PIX,
+            LocalDateTime.of(2026, 9, 20, 10, 0), LocalDateTime.of(2026, 9, 23, 10, 0)
+        );
+        Locacao locacao = criarLocacao(cliente, filial, filial, CategoriaVeiculo.HATCH, BigDecimal.valueOf(360));
+        when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
+        when(filialLocadoraRepository.findById(filialId)).thenReturn(Optional.of(filial));
+        when(mapper.mapearParaLocacao(dto, cliente, filial, filial, CategoriaVeiculo.HATCH, BigDecimal.valueOf(360.0)))
+            .thenReturn(locacao);
+        when(veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filial.getIdLocadora(), dto.dataRetirada(), dto.dataDevolucao()))
+            .thenReturn(categoriasDisponiveis);
+
+        assertThatThrownBy(() -> service.criarReservaDaCategoriaDeVeiculo(dto))
+            .isInstanceOf(DadosIncompativeisException.class)
+            .hasMessage("Categoria indisponível nesta filial para o período informado.");
+        verifyNoInteractions(repository);
+        verify(mapper, never()).mapearParaResponse(locacao);
     }
 
     @Test

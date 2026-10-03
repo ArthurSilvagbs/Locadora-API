@@ -421,7 +421,7 @@ public class VeiculoServiceTest {
          8
       );
 
-      when(repository.buscarCategoriasVeiculoPorFilial(
+      when(repository.buscarCategoriasVeiculoPorFilialPaginado(
          idFilialLocadora,
          dataRetirada,
          dataDevolucao,
@@ -445,7 +445,7 @@ public class VeiculoServiceTest {
          new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.FURGAO, BigDecimal.valueOf(792.0)),
          new VeiculoCategoriasDisponiveisResponseDTO(CategoriaVeiculo.BLINDADO, BigDecimal.valueOf(1080.0))
       );
-      verify(repository).buscarCategoriasVeiculoPorFilial(
+      verify(repository).buscarCategoriasVeiculoPorFilialPaginado(
          idFilialLocadora,
          dataRetirada,
          dataDevolucao,
