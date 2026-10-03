@@ -85,7 +85,7 @@ public class LocacaoService {
       if (veiculo.getCategoriaVeiculo() != locacao.getCategoriaVeiculo()) {
          throw new DadosIncompativeisException("O veículo selecionado não pertence a categoria registrada na locação.");
       }
-      if (veiculo.getFilialAtual().getIdLocadora() != locacao.getFilialRetirada().getIdLocadora()) {
+      if (!veiculo.getFilialAtual().getIdLocadora().equals(locacao.getFilialRetirada().getIdLocadora())) {
          throw new DadosIncompativeisException("O veículo não esta com o registro vinculado a esta filial, estando cadastrado em outra filial.");
       }
       if (veiculo.getStatusVeiculo() != StatusVeiculo.DISPONIVEL) {
