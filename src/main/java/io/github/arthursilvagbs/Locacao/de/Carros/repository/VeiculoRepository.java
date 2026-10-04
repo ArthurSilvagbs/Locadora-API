@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,26 +21,118 @@ public interface VeiculoRepository extends JpaRepository<Veiculo, UUID> {
    Optional<Veiculo> findByPlacaVeiculo(String placa);
    Optional<Veiculo> findByRenavam(String renavam);
 
+   @Query(value = """
+      SELECT DISTINCT v.categoriaVeiculo
+      FROM Veiculo v
+      WHERE v.filialAtual.idLocadora = :idFilialLocadora
+      AND NOT EXISTS (
+         SELECT marco.idLocacao
+         FROM Locacao marco
+         WHERE marco.filialRetirada.idLocadora = :idFilialLocadora
+         AND marco.categoriaVeiculo = v.categoriaVeiculo
+         AND marco.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+         AND marco.dataRetirada < :dataDevolucao
+         AND marco.dataDevolucao > :dataRetirada
+         AND (
+            SELECT COUNT(l)
+            FROM Locacao l
+            WHERE l.filialRetirada.idLocadora = :idFilialLocadora
+            AND l.categoriaVeiculo = v.categoriaVeiculo
+            AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+            AND l.dataRetirada <= CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+            AND l.dataDevolucao > CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+         ) >= (
+            SELECT COUNT(frota)
+            FROM Veiculo frota
+            WHERE frota.filialAtual.idLocadora = :idFilialLocadora
+            AND frota.categoriaVeiculo = v.categoriaVeiculo
+         )
+      )
+      ORDER BY v.categoriaVeiculo
+      """, countQuery = """
+      SELECT COUNT(DISTINCT total.categoriaVeiculo)
+      FROM Veiculo total
+      WHERE total.filialAtual.idLocadora = :idFilialLocadora
+      AND total.categoriaVeiculo IN (
+         SELECT DISTINCT v.categoriaVeiculo
+         FROM Veiculo v
+         WHERE v.filialAtual.idLocadora = :idFilialLocadora
+         AND NOT EXISTS (
+            SELECT marco.idLocacao
+            FROM Locacao marco
+            WHERE marco.filialRetirada.idLocadora = :idFilialLocadora
+            AND marco.categoriaVeiculo = v.categoriaVeiculo
+            AND marco.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+            AND marco.dataRetirada < :dataDevolucao
+            AND marco.dataDevolucao > :dataRetirada
+            AND (
+               SELECT COUNT(l)
+               FROM Locacao l
+               WHERE l.filialRetirada.idLocadora = :idFilialLocadora
+               AND l.categoriaVeiculo = v.categoriaVeiculo
+               AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+               AND l.dataRetirada <= CASE
+                  WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+                  ELSE marco.dataRetirada END
+               AND l.dataDevolucao > CASE
+                  WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+                  ELSE marco.dataRetirada END
+            ) >= (
+               SELECT COUNT(frota)
+               FROM Veiculo frota
+               WHERE frota.filialAtual.idLocadora = :idFilialLocadora
+               AND frota.categoriaVeiculo = v.categoriaVeiculo
+            )
+         )
+      )
+      """)
+   Page<CategoriaVeiculo> buscarCategoriasVeiculoPorFilialPaginado(
+      @Param("idFilialLocadora") UUID idFilialLocadora,
+      @Param("dataRetirada") LocalDateTime dataRetirada,
+      @Param("dataDevolucao") LocalDateTime dataDevolucao,
+      Pageable pageable
+   );
 
    @Query("""
       SELECT DISTINCT v.categoriaVeiculo
       FROM Veiculo v
       WHERE v.filialAtual.idLocadora = :idFilialLocadora
-      GROUP BY v.categoriaVeiculo
-      HAVING COUNT(v) > (
-         SELECT COUNT(1)
-         FROM Locacao l
-         WHERE l.filialRetirada.idLocadora = :idFilialLocadora
-         AND l.categoriaVeiculo = v.categoriaVeiculo
-         AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
-         AND l.dataRetirada < :dataDevolucao
-         AND l.dataDevolucao > :dataRetirada
+      AND NOT EXISTS (
+         SELECT marco.idLocacao
+         FROM Locacao marco
+         WHERE marco.filialRetirada.idLocadora = :idFilialLocadora
+         AND marco.categoriaVeiculo = v.categoriaVeiculo
+         AND marco.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+         AND marco.dataRetirada < :dataDevolucao
+         AND marco.dataDevolucao > :dataRetirada
+         AND (
+            SELECT COUNT(l)
+            FROM Locacao l
+            WHERE l.filialRetirada.idLocadora = :idFilialLocadora
+            AND l.categoriaVeiculo = v.categoriaVeiculo
+            AND l.statusLocacao IN (PENDENTE_DE_RETIRADA, RETIRADO)
+            AND l.dataRetirada <= CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+            AND l.dataDevolucao > CASE
+               WHEN marco.dataRetirada < :dataRetirada THEN :dataRetirada
+               ELSE marco.dataRetirada END
+         ) >= (
+            SELECT COUNT(frota)
+            FROM Veiculo frota
+            WHERE frota.filialAtual.idLocadora = :idFilialLocadora
+            AND frota.categoriaVeiculo = v.categoriaVeiculo
+         )
       )
+      ORDER BY v.categoriaVeiculo
       """)
-   Page<CategoriaVeiculo> buscarCategoriasVeiculoPorFilial(
+   List<CategoriaVeiculo> buscarCategoriasVeiculoPorFilial(
       @Param("idFilialLocadora") UUID idFilialLocadora,
       @Param("dataRetirada") LocalDateTime dataRetirada,
-      @Param("dataDevolucao") LocalDateTime dataDevolucao,
-      Pageable pageable
+      @Param("dataDevolucao") LocalDateTime dataDevolucao
    );
 }

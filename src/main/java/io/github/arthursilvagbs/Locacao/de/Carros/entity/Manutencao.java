@@ -44,6 +44,11 @@ public class Manutencao {
     @Column(precision = 7, scale = 2, nullable = false)
     private BigDecimal valor;
 
+    @Setter
+    @Column(name = "status_manutencao", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private StatusManutencao statusManutencao;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

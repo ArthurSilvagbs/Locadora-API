@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -80,6 +81,9 @@ class LocacaoServiceTest {
         when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
         when(filialLocadoraRepository.findById(filialRetiradaId)).thenReturn(Optional.of(filialRetirada));
         when(filialLocadoraRepository.findById(filialDevolucaoId)).thenReturn(Optional.of(filialDevolucao));
+        when(veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(), dataRetirada, dataDevolucao))
+            .thenReturn(List.of(CategoriaVeiculo.HATCH));
         when(mapper.mapearParaLocacao(dto, cliente, filialRetirada, filialDevolucao, CategoriaVeiculo.HATCH, valorLocacao))
             .thenReturn(locacao);
         when(repository.save(locacao)).thenReturn(locacao);
@@ -93,7 +97,44 @@ class LocacaoServiceTest {
         assertThat(locacao.getValorLocacao()).isEqualByComparingTo(valorLocacao);
         assertThat(locacao.getStatusLocacao()).isEqualTo(StatusLocacao.PENDENTE_DE_RETIRADA);
         verify(repository).save(locacao);
-        verifyNoInteractions(veiculoRepository);
+        verify(veiculoRepository).buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(), dataRetirada, dataDevolucao);
+    }
+
+    @Test
+    void criarReservaDaCategoriaDeVeiculo_semCategoriasDisponiveis_naoSalva() {
+        verificarReservaIndisponivel(List.of());
+    }
+
+    @Test
+    void criarReservaDaCategoriaDeVeiculo_apenasOutraCategoriaDisponivel_naoSalva() {
+        verificarReservaIndisponivel(List.of(CategoriaVeiculo.SUV));
+    }
+
+    private void verificarReservaIndisponivel(List<CategoriaVeiculo> categoriasDisponiveis) {
+        UUID clienteId = UUID.randomUUID();
+        UUID filialId = UUID.randomUUID();
+        FilialLocadora filial = criarFilial();
+        Cliente cliente = new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1");
+        LocacaoCreateDTO dto = new LocacaoCreateDTO(
+            clienteId.toString(), filialId.toString(), filialId.toString(),
+            CategoriaVeiculo.HATCH, FormaPagamento.PIX,
+            LocalDateTime.of(2026, 9, 20, 10, 0), LocalDateTime.of(2026, 9, 23, 10, 0)
+        );
+        Locacao locacao = criarLocacao(cliente, filial, filial, CategoriaVeiculo.HATCH, BigDecimal.valueOf(360));
+        when(clienteRepository.findById(clienteId)).thenReturn(Optional.of(cliente));
+        when(filialLocadoraRepository.findById(filialId)).thenReturn(Optional.of(filial));
+        when(mapper.mapearParaLocacao(dto, cliente, filial, filial, CategoriaVeiculo.HATCH, BigDecimal.valueOf(360.0)))
+            .thenReturn(locacao);
+        when(veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filial.getIdLocadora(), dto.dataRetirada(), dto.dataDevolucao()))
+            .thenReturn(categoriasDisponiveis);
+
+        assertThatThrownBy(() -> service.criarReservaDaCategoriaDeVeiculo(dto))
+            .isInstanceOf(DadosIncompativeisException.class)
+            .hasMessage("Categoria indisponível nesta filial para o período informado.");
+        verifyNoInteractions(repository);
+        verify(mapper, never()).mapearParaResponse(locacao);
     }
 
     @Test
@@ -118,15 +159,17 @@ class LocacaoServiceTest {
     void confirmarRetirada_atribuiVeiculoEAtualizaStatus() {
         UUID locacaoId = UUID.randomUUID();
         UUID veiculoId = UUID.randomUUID();
-        FilialLocadora filial = criarFilial();
+        UUID filialId = UUID.randomUUID();
+        FilialLocadora filialRetirada = criarFilial(filialId);
+        FilialLocadora filialDoVeiculo = criarFilial(UUID.fromString(filialId.toString()));
         Locacao locacao = criarLocacao(
             new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
-            filial,
-            filial,
+            filialRetirada,
+            filialRetirada,
             CategoriaVeiculo.HATCH,
             BigDecimal.valueOf(360.0)
         );
-        Veiculo veiculo = criarVeiculo(filial, CategoriaVeiculo.HATCH, StatusVeiculo.DISPONIVEL);
+        Veiculo veiculo = criarVeiculo(filialDoVeiculo, CategoriaVeiculo.HATCH, StatusVeiculo.DISPONIVEL);
         ConfirmarRetiradaDTO dto = new ConfirmarRetiradaDTO(veiculoId.toString());
         LocacaoResponseDTO resposta = respostaDe(locacao);
 
@@ -144,6 +187,37 @@ class LocacaoServiceTest {
         assertThat(veiculo.getStatusVeiculo()).isEqualTo(StatusVeiculo.LOCADO);
         verify(veiculoRepository).save(veiculo);
         verify(repository).save(locacao);
+    }
+
+    @Test
+    void confirmarRetirada_veiculoDeOutraFilial_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        UUID veiculoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(UUID.randomUUID()),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        Veiculo veiculo = criarVeiculo(
+            criarFilial(UUID.randomUUID()),
+            CategoriaVeiculo.HATCH,
+            StatusVeiculo.DISPONIVEL
+        );
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+        when(veiculoRepository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+
+        assertThatThrownBy(() -> service.confirmarRetirada(
+            new ConfirmarRetiradaDTO(veiculoId.toString()),
+            locacaoId.toString()
+        ))
+            .isInstanceOf(DadosIncompativeisException.class)
+            .hasMessage("O veículo não esta com o registro vinculado a esta filial, estando cadastrado em outra filial.");
+
+        verify(veiculoRepository, never()).save(veiculo);
+        verify(repository, never()).save(locacao);
     }
 
     @Test
@@ -222,7 +296,7 @@ class LocacaoServiceTest {
     void confirmarRetirada_veiculoIndisponivel_lancaExcecao() {
         UUID locacaoId = UUID.randomUUID();
         UUID veiculoId = UUID.randomUUID();
-        FilialLocadora filial = criarFilial();
+        FilialLocadora filial = criarFilial(UUID.randomUUID());
         Locacao locacao = criarLocacao(
             new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
             filial,
@@ -280,6 +354,123 @@ class LocacaoServiceTest {
     }
 
     @Test
+    void cancelarLocacao_pendenteSemVeiculo_cancelaReservaSemAlterarVeiculo() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        LocacaoResponseDTO resposta = respostaDe(locacao);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+        when(repository.save(locacao)).thenReturn(locacao);
+        when(mapper.mapearParaResponse(locacao)).thenReturn(resposta);
+
+        LocacaoResponseDTO resultado = service.cancelarLocacao(locacaoId.toString());
+
+        assertThat(resultado).isEqualTo(resposta);
+        assertThat(locacao.getStatusLocacao()).isEqualTo(StatusLocacao.CANCELADA);
+        verify(repository).save(locacao);
+        verifyNoInteractions(veiculoRepository);
+    }
+
+    @Test
+    void cancelarLocacao_jaCancelada_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        locacao.setStatusLocacao(StatusLocacao.CANCELADA);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.cancelarLocacao(locacaoId.toString()))
+            .isInstanceOf(StatusInvalidoException.class)
+            .hasMessage("A locação já está com o status 'CANCELADA'.");
+
+        verify(repository, never()).save(locacao);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
+    void cancelarLocacao_retirada_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        locacao.setStatusLocacao(StatusLocacao.RETIRADO);
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.cancelarLocacao(locacaoId.toString()))
+            .isInstanceOf(StatusInvalidoException.class)
+            .hasMessage("Status de locação inválido.");
+
+        verify(repository, never()).save(locacao);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
+    void buscarLocacaoPorId_existente_retornaDTO() {
+        UUID id = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(), criarFilial(), CategoriaVeiculo.HATCH, BigDecimal.valueOf(360)
+        );
+        LocacaoResponseDTO resposta = respostaDe(locacao);
+        when(repository.findById(id)).thenReturn(Optional.of(locacao));
+        when(mapper.mapearParaResponse(locacao)).thenReturn(resposta);
+
+        assertThat(service.buscarLocacaoPorId(id.toString())).isEqualTo(resposta);
+        verify(mapper).mapearParaResponse(locacao);
+    }
+
+    @Test
+    void buscarLocacaoPorId_inexistente_lancaExcecao() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.buscarLocacaoPorId(id.toString()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class)
+            .hasMessage("Locação não encontrada.");
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void confirmarDevolucao_locacaoNaoRetirada_lancaExcecaoSemAlterarVeiculo() {
+        UUID id = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(), criarFilial(), CategoriaVeiculo.HATCH, BigDecimal.valueOf(360)
+        );
+        when(repository.findById(id)).thenReturn(Optional.of(locacao));
+
+        assertThatThrownBy(() -> service.confirmarDevolucao(new ConfirmarDevolucaoDTO(25.0), id.toString()))
+            .isInstanceOf(StatusInvalidoException.class);
+        verifyNoInteractions(veiculoRepository, mapper);
+        verify(repository, never()).save(locacao);
+    }
+
+    @Test
+    void confirmarRetirada_locacaoInexistente_lancaExcecao() {
+        UUID id = UUID.randomUUID();
+        assertThatThrownBy(() -> service.confirmarRetirada(new ConfirmarRetiradaDTO(UUID.randomUUID().toString()), id.toString()))
+            .isInstanceOf(EntidadeNaoEncontradaException.class);
+        verifyNoInteractions(veiculoRepository, mapper);
+    }
+
+    @Test
     void calculoDiariaPorCategoria_calculaDiariaParaTodasAsCategorias() {
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.HATCH)).isEqualByComparingTo("120.0");
         assertThat(service.calculoDiariaPorCategoria(CategoriaVeiculo.SEDAN)).isEqualByComparingTo("156.0");
@@ -293,6 +484,24 @@ class LocacaoServiceTest {
 
     private FilialLocadora criarFilial() {
         return new FilialLocadora("Filial Centro", "12345678000199", "SP", "Sao Paulo", "Rua A, 1", "11999999999", "filial@example.com");
+    }
+
+    private FilialLocadora criarFilial(UUID id) {
+        return new FilialLocadora(
+            id,
+            "Filial Centro",
+            "12345678000199",
+            "SP",
+            "Sao Paulo",
+            "Rua A, 1",
+            "11999999999",
+            "filial@example.com",
+            null,
+            null,
+            null,
+            null,
+            null
+        );
     }
 
     private Locacao criarLocacao(
@@ -326,11 +535,11 @@ class LocacaoServiceTest {
     private LocacaoResponseDTO respostaDe(Locacao locacao) {
         return new LocacaoResponseDTO(
             UUID.randomUUID(),
-            locacao.getCliente(),
-            locacao.getVeiculo(),
+            UUID.randomUUID().toString(),
+            locacao.getVeiculo() == null ? null : UUID.randomUUID().toString(),
             locacao.getValorLocacao(),
-            locacao.getFilialRetirada(),
-            locacao.getFilialDevolucao(),
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
             locacao.getCategoriaVeiculo(),
             locacao.getFormaPagamento(),
             locacao.getStatusLocacao(),

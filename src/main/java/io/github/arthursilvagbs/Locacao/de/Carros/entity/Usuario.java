@@ -39,9 +39,8 @@ public class Usuario {
    @UpdateTimestamp
    private LocalDateTime updatedAt;
 
-   public Usuario(String email, String senha, Role roles) {
+   public Usuario(String email, String senha) {
       this.email = email;
       this.senha = senha;
-      this.roles = roles;
    }
 }

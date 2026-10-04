@@ -6,15 +6,14 @@ import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.*;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DadosIncompativeisException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DatasInvalidasException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.StatusInvalidoException;
-import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.VeiculoNaoDisponivelException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.LocacaoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.ClienteRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.FilialLocadoraRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.LocacaoRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
-import jakarta.transaction.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +41,10 @@ public class LocacaoService {
       FilialLocadora filialDevolucao = filialLocadoraRepository.findById(UUID.fromString(dto.filialDevolucaoId()))
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Filial não encontrada."));
 
+      if (!dto.dataDevolucao().isAfter(dto.dataRetirada())) {
+         throw new DatasInvalidasException("A data de devolução não pode ser anterior a data de retirada.");
+      }
+
       long diferenciaDias = ChronoUnit.DAYS.between(dto.dataRetirada(), dto.dataDevolucao());
 
       BigDecimal valorLocacao = calculoDiariaPorCategoria(dto.categoriaVeiculo()).multiply(BigDecimal.valueOf(diferenciaDias));
@@ -55,6 +58,18 @@ public class LocacaoService {
          valorLocacao
       );
       locacao.setStatusLocacao(StatusLocacao.PENDENTE_DE_RETIRADA);
+
+      var categoriasDisponiveis =
+         veiculoRepository.buscarCategoriasVeiculoPorFilial(
+            filialRetirada.getIdLocadora(),
+            dto.dataRetirada(),
+            dto.dataDevolucao()
+         );
+
+      if (!categoriasDisponiveis.contains(dto.categoriaVeiculo())) {
+         throw new DadosIncompativeisException("Categoria indisponível nesta filial para o período informado.");
+      }
+
       Locacao locacaoAtualizada = repository.save(locacao);
 
       return mapper.mapearParaResponse(locacaoAtualizada);
@@ -75,7 +90,7 @@ public class LocacaoService {
       if (veiculo.getCategoriaVeiculo() != locacao.getCategoriaVeiculo()) {
          throw new DadosIncompativeisException("O veículo selecionado não pertence a categoria registrada na locação.");
       }
-      if (veiculo.getFilialAtual().getIdLocadora() != locacao.getFilialRetirada().getIdLocadora()) {
+      if (!veiculo.getFilialAtual().getIdLocadora().equals(locacao.getFilialRetirada().getIdLocadora())) {
          throw new DadosIncompativeisException("O veículo não esta com o registro vinculado a esta filial, estando cadastrado em outra filial.");
       }
       if (veiculo.getStatusVeiculo() != StatusVeiculo.DISPONIVEL) {
@@ -119,21 +134,30 @@ public class LocacaoService {
       Locacao locacao = repository.findById(UUID.fromString(locacaoId))
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
 
-      if (locacao.getStatusLocacao() == StatusLocacao.CANCELADA) {
+      if (locacao.getStatusLocacao().equals(StatusLocacao.CANCELADA)) {
          throw new StatusInvalidoException("A locação já está com o status 'CANCELADA'.");
       }
-      if (locacao.getStatusLocacao() != StatusLocacao.PENDENTE_DE_RETIRADA) {
+      if (!locacao.getStatusLocacao().equals(StatusLocacao.PENDENTE_DE_RETIRADA)) {
          throw new StatusInvalidoException("Status de locação inválido.");
       }
 
-      Veiculo veiculo = locacao.getVeiculo();
-      veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
-      veiculoRepository.save(veiculo);
+      if (locacao.getVeiculo() != null) {
+         Veiculo veiculo = locacao.getVeiculo();
+         veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
+         veiculoRepository.save(veiculo);
+      }
 
       locacao.setStatusLocacao(StatusLocacao.CANCELADA);
       Locacao locacaoAtualizada = repository.save(locacao);
 
       return mapper.mapearParaResponse(locacaoAtualizada);
+   }
+
+   @Transactional(readOnly = true)
+   public LocacaoResponseDTO buscarLocacaoPorId(String id) {
+      Locacao locacao = repository.findById(UUID.fromString(id))
+         .orElseThrow(() -> new EntidadeNaoEncontradaException("Locação não encontrada."));
+      return mapper.mapearParaResponse(locacao);
    }
 
    protected BigDecimal calculoDiariaPorCategoria(CategoriaVeiculo categoriaVeiculo) {

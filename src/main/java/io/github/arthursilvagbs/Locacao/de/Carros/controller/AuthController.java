@@ -20,9 +20,14 @@ public class AuthController {
 
    private final AuthService service;
 
-   @PostMapping("/registrar")
-   public ResponseEntity<AuthResponseDTO> registrar(@Valid @RequestBody RegisterRequestDTO dto) {
-      return ResponseEntity.status(HttpStatus.CREATED).body(service.registrar(dto));
+   @PostMapping("/registrar-cliente")
+   public ResponseEntity<AuthResponseDTO> registrarCliente(@Valid @RequestBody RegisterRequestDTO dto) {
+      return ResponseEntity.status(HttpStatus.CREATED).body(service.registrarCliente(dto));
+   }
+
+   @PostMapping("/registrar-funcionario")
+   public ResponseEntity<AuthResponseDTO> registrarFuncionario(@Valid @RequestBody RegisterRequestDTO dto) {
+      return ResponseEntity.status(HttpStatus.CREATED).body(service.registrarFuncionario(dto));
    }
 
    @PostMapping("/login")
