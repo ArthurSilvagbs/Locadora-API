@@ -187,6 +187,67 @@ public class ManutencaoController {
       return ResponseEntity.status(HttpStatus.OK).body(responsePaginado);
    }
 
+   @Operation(summary = "Concluir uma manutenção por ID", description = "Concluir uma manutenção, alterando o status do veículo vinculado a essa manutenção mudando seu status, e mudando tambem o status da manutenção")
+   @ApiResponses({
+      @ApiResponse(
+         responseCode = "200",
+         description = "Manutenção concluída",
+         content = @Content(mediaType = "application/json", schema = @Schema(implementation = ManutencaoResponseDTO.class))
+      ),
+      @ApiResponse(
+         responseCode = "400",
+         description = "Dados de entrada inválidos",
+         content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = ErrorResponse.class),
+            examples = @ExampleObject(value = """
+               {
+                 "status": 400,
+                 "error": "BAD REQUEST",
+                 "message": "Corpo da requisição inválido",
+                 "path": "/manutencao/550e8400-e29b-41d4-a716-446655440000",
+                 "timestamp": "2026-09-29T12:40:00"
+               }
+               """)
+         )
+      ),
+      @ApiResponse(
+         responseCode = "401",
+         description = "Token inválido",
+         content = @Content
+      ),
+      @ApiResponse(
+         responseCode = "403",
+         description = "Acesso negado ou credenciais ausentes",
+         content = @Content
+      ),
+      @ApiResponse(
+         responseCode = "404",
+         description = "Manutenção não encontrada",
+         content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = ErrorResponse.class),
+            examples = @ExampleObject(value = """
+               {
+                 "status": 404,
+                 "error": "NOT FOUND",
+                 "message": "Manutenção não encontrada.",
+                 "path": "/manutencao/550e8400-e29b-41d4-a716-446655440000",
+                 "timestamp": "2026-09-29T12:40:00"
+               }
+               """)
+         )
+      )
+   })
+   @PutMapping("/{id}/concluir")
+   public ResponseEntity<ManutencaoResponseDTO> concluirManutencao(
+      @Parameter(description = "UUID da manutenção", example = "550e8400-e29b-41d4-a716-446655440000")
+      @PathVariable("id") String id
+   ) {
+      ManutencaoResponseDTO response = service.concluirManutencao(id);
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+   }
+
    @Operation(summary = "Atualizar manutenção por ID", description = "Altera data, descrição e valor da manutenção. Disponível para funcionário, gerente e administrador.")
    @ApiResponses({
       @ApiResponse(

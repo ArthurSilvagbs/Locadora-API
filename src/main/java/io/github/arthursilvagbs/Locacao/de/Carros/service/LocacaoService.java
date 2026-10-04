@@ -6,6 +6,7 @@ import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.locacao.LocacaoResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.*;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DadosIncompativeisException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DatasInvalidasException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.StatusInvalidoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.LocacaoMapper;
@@ -39,6 +40,10 @@ public class LocacaoService {
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Filial não encontrada."));
       FilialLocadora filialDevolucao = filialLocadoraRepository.findById(UUID.fromString(dto.filialDevolucaoId()))
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Filial não encontrada."));
+
+      if (!dto.dataDevolucao().isAfter(dto.dataRetirada())) {
+         throw new DatasInvalidasException("A data de devolução não pode ser anterior a data de retirada.");
+      }
 
       long diferenciaDias = ChronoUnit.DAYS.between(dto.dataRetirada(), dto.dataDevolucao());
 

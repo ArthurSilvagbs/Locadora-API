@@ -7,6 +7,8 @@ import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DadosIncompativeisException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DatasInvalidasException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.VeiculoMapper;
@@ -90,6 +92,11 @@ public class VeiculoService {
 
    @Transactional(readOnly = true)
    public Page<VeiculoCategoriasDisponiveisResponseDTO> buscarCategoriaDisponiveisPorFilial(String idFilialLocadora, LocalDateTime dataRetirada, LocalDateTime dataDevolucao) {
+
+      if (!dataDevolucao.isAfter(dataRetirada)) {
+         throw new DatasInvalidasException("A data de devolução não pode ser anterior a data de retirada.");
+      }
+
       UUID idFilial = UUID.fromString(idFilialLocadora);
       Pageable pg = PageRequest.of(0, 10);
 
@@ -99,6 +106,11 @@ public class VeiculoService {
 
       return lista.map(categoria -> {
          BigDecimal diaria = calculoDiariaPorCategoria(categoria);
+
+         if (diaria.compareTo(BigDecimal.ZERO) < 0) {
+            throw new DadosIncompativeisException("O valor da transação não pode ser negativo.");
+         }
+
          BigDecimal valorLocacao = diaria.multiply(BigDecimal.valueOf(diferenciaDias));
 
          return new VeiculoCategoriasDisponiveisResponseDTO(categoria, valorLocacao);

@@ -6,6 +6,7 @@ import io.github.arthursilvagbs.Locacao.de.Carros.dto.manutencao.ManutencaoUpdat
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Manutencao;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusManutencao;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
@@ -84,7 +85,7 @@ class ManutencaoServiceTest {
 
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
          manutencaoMapeada .getIdManutencao(), veiculo, dto.dataManutencao(), dto.descricao(),
-         manutencaoMapeada.getQuilimetragemVeiculo(), dto.valor()
+         StatusManutencao.EM_ANDAMENTO, manutencaoMapeada.getQuilimetragemVeiculo(), dto.valor()
       );
 
       when(veiculoRepository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
@@ -98,6 +99,7 @@ class ManutencaoServiceTest {
 
       // O veículo precisa ficar bloqueado (EM_MANUTENCAO) pra não ser reservado enquanto está na oficina
       assertThat(veiculo.getStatusVeiculo()).isEqualTo(StatusVeiculo.EM_MANUTENCAO);
+      assertThat(manutencaoMapeada.getStatusManutencao()).isEqualTo(StatusManutencao.EM_ANDAMENTO);
       verify(veiculoRepository, times(1)).save(veiculo);
       verify(repository, times(1)).save(manutencaoMapeada);
    }
@@ -134,7 +136,7 @@ class ManutencaoServiceTest {
 
       assertThatThrownBy(() -> service.criarManutencao(dto))
          .isInstanceOf(StatusInvalidoException.class)
-         .hasMessage("O veículo está locado no momento.");
+         .hasMessage("O veículo não está disponível para manutenção.");
 
       verify(veiculoRepository, never()).save(any());
       verify(repository, never()).save(any());
@@ -155,9 +157,72 @@ class ManutencaoServiceTest {
 
       assertThatThrownBy(() -> service.criarManutencao(dto))
          .isInstanceOf(StatusInvalidoException.class)
-         .hasMessage("O veículo já está em manutenção.");
+         .hasMessage("O veículo não está disponível para manutenção.");
 
       verify(veiculoRepository, never()).save(any());
+      verify(repository, never()).save(any());
+   }
+
+   // ---------------------------------------------------------------------
+   // MÉTODO: concluirManutencao
+   // ---------------------------------------------------------------------
+
+   @Test
+   @DisplayName("concluirManutencao deve concluir a manutenção e liberar o veículo.")
+   void concluirManutencao_emAndamento_retornaResponseDTO() {
+      UUID id = UUID.randomUUID();
+      Veiculo veiculo = criarVeiculo(StatusVeiculo.EM_MANUTENCAO);
+      Manutencao manutencao = criarManutencaoEntidade(veiculo);
+      manutencao.setStatusManutencao(StatusManutencao.EM_ANDAMENTO);
+      ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
+         manutencao.getIdManutencao(),
+         veiculo,
+         manutencao.getDataManutencao(),
+         manutencao.getDescricao(),
+         StatusManutencao.CONCLUIDA,
+         manutencao.getQuilimetragemVeiculo(),
+         manutencao.getValor()
+      );
+
+      when(repository.findById(id)).thenReturn(Optional.of(manutencao));
+      when(mapper.mapearParaResponse(manutencao)).thenReturn(responseEsperado);
+
+      ManutencaoResponseDTO response = service.concluirManutencao(id.toString());
+
+      assertThat(response).isEqualTo(responseEsperado);
+      assertThat(veiculo.getStatusVeiculo()).isEqualTo(StatusVeiculo.DISPONIVEL);
+      assertThat(manutencao.getStatusManutencao()).isEqualTo(StatusManutencao.CONCLUIDA);
+      verify(veiculoRepository).save(veiculo);
+      verify(repository).save(manutencao);
+   }
+
+   @Test
+   @DisplayName("concluirManutencao deve lançar exception quando a manutenção não existe.")
+   void concluirManutencao_naoEncontrada_lancaExcecao() {
+      UUID id = UUID.randomUUID();
+      when(repository.findById(id)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> service.concluirManutencao(id.toString()))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Manutenção não encontrada.");
+
+      verifyNoInteractions(veiculoRepository, mapper);
+      verify(repository, never()).save(any());
+   }
+
+   @Test
+   @DisplayName("concluirManutencao deve lançar exception quando a manutenção já foi concluída.")
+   void concluirManutencao_concluida_lancaExcecao() {
+      UUID id = UUID.randomUUID();
+      Manutencao manutencao = criarManutencaoEntidade(criarVeiculo(StatusVeiculo.DISPONIVEL));
+      manutencao.setStatusManutencao(StatusManutencao.CONCLUIDA);
+      when(repository.findById(id)).thenReturn(Optional.of(manutencao));
+
+      assertThatThrownBy(() -> service.concluirManutencao(id.toString()))
+         .isInstanceOf(StatusInvalidoException.class)
+         .hasMessage("A manutenção não está em andamento.");
+
+      verifyNoInteractions(veiculoRepository, mapper);
       verify(repository, never()).save(any());
    }
 
@@ -173,7 +238,7 @@ class ManutencaoServiceTest {
       Manutencao manutencao = criarManutencaoEntidade(veiculo);
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
          manutencao.getIdManutencao(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
-         manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
+         manutencao.getStatusManutencao(), manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
       );
 
       when(repository.findById(id)).thenReturn(Optional.of(manutencao));
@@ -207,7 +272,7 @@ class ManutencaoServiceTest {
       Manutencao manutencao = criarManutencaoEntidade(veiculo);
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
          manutencao.getIdManutencao(), veiculo, manutencao.getDataManutencao(), manutencao.getDescricao(),
-         manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
+         manutencao.getStatusManutencao(), manutencao.getQuilimetragemVeiculo(), manutencao.getValor()
       );
       Pageable pageable = PageRequest.of(0, 10, Sort.by("dataManutencao").descending());
       Page<Manutencao> paginaManutencoes = new PageImpl<>(List.of(manutencao), pageable, 1);
@@ -235,7 +300,7 @@ class ManutencaoServiceTest {
       );
       ManutencaoResponseDTO responseEsperado = new ManutencaoResponseDTO(
          manutencao.getIdManutencao(), veiculo, dto.dataManutencao(), dto.descricao(),
-         manutencao.getQuilimetragemVeiculo(), dto.valor()
+         manutencao.getStatusManutencao(), manutencao.getQuilimetragemVeiculo(), dto.valor()
       );
 
       when(repository.findById(id)).thenReturn(Optional.of(manutencao));

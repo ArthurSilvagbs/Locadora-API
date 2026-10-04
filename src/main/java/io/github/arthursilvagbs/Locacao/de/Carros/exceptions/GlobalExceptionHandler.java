@@ -10,7 +10,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.time.LocalDateTime;
 
@@ -175,6 +174,22 @@ public class GlobalExceptionHandler {
       );
 
       return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+   }
+
+   @ExceptionHandler(DatasInvalidasException.class)
+   public ResponseEntity<ErrorResponse> handlerDatasInvalidas(
+      DatasInvalidasException e,
+      HttpServletRequest request
+   ) {
+      ErrorResponse response = new ErrorResponse(
+         400,
+         "BAD REQUEST",
+         e.getMessage(),
+         request.getRequestURI(),
+         LocalDateTime.now()
+      );
+
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
    }
 
 }

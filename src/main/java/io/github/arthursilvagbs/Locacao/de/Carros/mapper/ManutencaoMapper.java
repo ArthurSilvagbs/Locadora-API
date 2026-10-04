@@ -23,6 +23,7 @@ public class ManutencaoMapper {
           entidade.getVeiculo(),
           entidade.getDataManutencao(),
           entidade.getDescricao(),
+          entidade.getStatusManutencao(),
           entidade.getQuilimetragemVeiculo(),
           entidade.getValor()
        );

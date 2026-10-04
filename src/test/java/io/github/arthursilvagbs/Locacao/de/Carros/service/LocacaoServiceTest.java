@@ -159,15 +159,17 @@ class LocacaoServiceTest {
     void confirmarRetirada_atribuiVeiculoEAtualizaStatus() {
         UUID locacaoId = UUID.randomUUID();
         UUID veiculoId = UUID.randomUUID();
-        FilialLocadora filial = criarFilial();
+        UUID filialId = UUID.randomUUID();
+        FilialLocadora filialRetirada = criarFilial(filialId);
+        FilialLocadora filialDoVeiculo = criarFilial(UUID.fromString(filialId.toString()));
         Locacao locacao = criarLocacao(
             new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
-            filial,
-            filial,
+            filialRetirada,
+            filialRetirada,
             CategoriaVeiculo.HATCH,
             BigDecimal.valueOf(360.0)
         );
-        Veiculo veiculo = criarVeiculo(filial, CategoriaVeiculo.HATCH, StatusVeiculo.DISPONIVEL);
+        Veiculo veiculo = criarVeiculo(filialDoVeiculo, CategoriaVeiculo.HATCH, StatusVeiculo.DISPONIVEL);
         ConfirmarRetiradaDTO dto = new ConfirmarRetiradaDTO(veiculoId.toString());
         LocacaoResponseDTO resposta = respostaDe(locacao);
 
@@ -185,6 +187,37 @@ class LocacaoServiceTest {
         assertThat(veiculo.getStatusVeiculo()).isEqualTo(StatusVeiculo.LOCADO);
         verify(veiculoRepository).save(veiculo);
         verify(repository).save(locacao);
+    }
+
+    @Test
+    void confirmarRetirada_veiculoDeOutraFilial_lancaExcecao() {
+        UUID locacaoId = UUID.randomUUID();
+        UUID veiculoId = UUID.randomUUID();
+        Locacao locacao = criarLocacao(
+            new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
+            criarFilial(UUID.randomUUID()),
+            criarFilial(),
+            CategoriaVeiculo.HATCH,
+            BigDecimal.valueOf(360.0)
+        );
+        Veiculo veiculo = criarVeiculo(
+            criarFilial(UUID.randomUUID()),
+            CategoriaVeiculo.HATCH,
+            StatusVeiculo.DISPONIVEL
+        );
+
+        when(repository.findById(locacaoId)).thenReturn(Optional.of(locacao));
+        when(veiculoRepository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+
+        assertThatThrownBy(() -> service.confirmarRetirada(
+            new ConfirmarRetiradaDTO(veiculoId.toString()),
+            locacaoId.toString()
+        ))
+            .isInstanceOf(DadosIncompativeisException.class)
+            .hasMessage("O veículo não esta com o registro vinculado a esta filial, estando cadastrado em outra filial.");
+
+        verify(veiculoRepository, never()).save(veiculo);
+        verify(repository, never()).save(locacao);
     }
 
     @Test
@@ -451,6 +484,24 @@ class LocacaoServiceTest {
 
     private FilialLocadora criarFilial() {
         return new FilialLocadora("Filial Centro", "12345678000199", "SP", "Sao Paulo", "Rua A, 1", "11999999999", "filial@example.com");
+    }
+
+    private FilialLocadora criarFilial(UUID id) {
+        return new FilialLocadora(
+            id,
+            "Filial Centro",
+            "12345678000199",
+            "SP",
+            "Sao Paulo",
+            "Rua A, 1",
+            "11999999999",
+            "filial@example.com",
+            null,
+            null,
+            null,
+            null,
+            null
+        );
     }
 
     private Locacao criarLocacao(
