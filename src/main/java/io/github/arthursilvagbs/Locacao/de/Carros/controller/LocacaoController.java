@@ -340,15 +340,26 @@ public class LocacaoController {
          content = @Content(
             mediaType = "application/json",
             schema = @Schema(implementation = ErrorResponse.class),
-            examples = @ExampleObject(value = """
-               {
-                 "status": 404,
-                 "error": "NOT FOUND",
-                 "message": "Locação não encontrada.",
-                 "path": "/locacao/devolucao/550e8400-e29b-41d4-a716-446655440000",
-                 "timestamp": "2026-09-29T12:40:00"
-               }
+            examples = {
+               @ExampleObject(value = """
+                  {
+                     "status": 404,
+                     "error": "NOT FOUND",
+                     "message": "Locação não encontrada.",
+                     "path": "/locacao/devolucao/550e8400-e29b-41d4-a716-446655440000",
+                     "timestamp": "2026-09-29T12:40:00"
+                  }
+               """),
+               @ExampleObject(value = """
+                  {
+                     "status": 404,
+                     "error": "NOT FOUND",
+                     "message": "Filial não econtrada.",
+                     "path": "/locacao/devolucao/550e8400-e29b-41d4-a716-446655440000",
+                     "timestamp": "2026-09-29T12:40:00"
+                  }
                """)
+            }
          )
       )
    })
@@ -358,7 +369,7 @@ public class LocacaoController {
       @Parameter(description = "UUID da locação", example = "550e8400-e29b-41d4-a716-446655440000")
       @PathVariable String id
    ) {
-      LocacaoResponseDTO response = service.confirmarDevolucao(dto,id);
+      LocacaoResponseDTO response = service.confirmarDevolucao(dto, id);
       return ResponseEntity.status(HttpStatus.OK).body(response);
    }
 
