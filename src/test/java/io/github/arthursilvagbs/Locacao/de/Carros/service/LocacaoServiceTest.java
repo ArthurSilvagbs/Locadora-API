@@ -296,7 +296,7 @@ class LocacaoServiceTest {
     void confirmarRetirada_veiculoIndisponivel_lancaExcecao() {
         UUID locacaoId = UUID.randomUUID();
         UUID veiculoId = UUID.randomUUID();
-        FilialLocadora filial = criarFilial();
+        FilialLocadora filial = criarFilial(UUID.randomUUID());
         Locacao locacao = criarLocacao(
             new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
             filial,
