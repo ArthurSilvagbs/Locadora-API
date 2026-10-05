@@ -1,16 +1,11 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.service;
 
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.*;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
-import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DadosIncompativeisException;
-import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DatasInvalidasException;
-import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
-import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.*;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.VeiculoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.FilialLocadoraRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
@@ -123,6 +118,27 @@ public class VeiculoService {
          .orElseThrow(() -> new EntidadeNaoEncontradaException("Veículo não encontrado."));
       atualizarAtributosVeiculo(veiculo, dto);
       repository.save(veiculo);
+      return mapper.mapearParaResponse(veiculo);
+   }
+
+   @Transactional
+   public VeiculoResponseDTO tranferirVeiculoDeFilial(String idVeiculo, VeiculoTranferenciaFilialDTO dto) {
+      Veiculo veiculo = repository.findById(UUID.fromString(idVeiculo))
+         .orElseThrow(() -> new EntidadeNaoEncontradaException("Veículo não encontrado."));
+      FilialLocadora filial = filialLocadoraRepository.findById(UUID.fromString(dto.idNovaFilialLocadora()))
+         .orElseThrow(() -> new EntidadeNaoEncontradaException("Filial não encontrada."));
+
+      if (!veiculo.getStatusVeiculo().equals(StatusVeiculo.DISPONIVEL)) {
+         throw new StatusInvalidoException("O veículo não pode ser transferido por conta de seu status.");
+      }
+
+      if (veiculo.getFilialAtual().getIdLocadora().equals(filial.getIdLocadora())) {
+         throw new DadosIncompativeisException("O veículo já está na filial indicada.");
+      }
+
+      veiculo.setFilialAtual(filial);
+      repository.save(veiculo);
+
       return mapper.mapearParaResponse(veiculo);
    }
 

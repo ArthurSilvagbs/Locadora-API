@@ -1,10 +1,7 @@
 package io.github.arthursilvagbs.Locacao.de.Carros.controller;
 
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.error.ErrorResponse;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
-import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.*;
 import io.github.arthursilvagbs.Locacao.de.Carros.service.VeiculoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -528,6 +525,102 @@ public class VeiculoController {
       @PathVariable String placa
    ) {
       VeiculoResponseDTO response = service.atualizarVeiculoPorPlaca(dto, placa);
+      return ResponseEntity.status(HttpStatus.OK).body(response);
+   }
+
+   @Operation(summary = "Transferir veículo entre filiais", description = "Move um veículo disponível para outra filial. Disponível para gerente e administrador.")
+   @ApiResponses({
+      @ApiResponse(
+         responseCode = "200",
+         description = "Veículo transferido",
+         content = @Content(mediaType = "application/json", schema = @Schema(implementation = VeiculoResponseDTO.class))
+      ),
+      @ApiResponse(
+         responseCode = "400",
+         description = "Dados inválidos, veículo indisponível ou filial de destino igual à atual",
+         content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = ErrorResponse.class),
+            examples = {
+               @ExampleObject(
+                  name = "Veículo indisponível",
+                  value = """
+                     {
+                       "status": 400,
+                       "error": "BAD REQUEST",
+                       "message": "O veículo não pode ser transferido por conta de seu status.",
+                       "path": "/veiculo/550e8400-e29b-41d4-a716-446655440000/tranferir-filial",
+                       "timestamp": "2026-10-04T12:40:00"
+                     }
+                     """
+               ),
+               @ExampleObject(
+                  name = "Filial atual",
+                  value = """
+                     {
+                       "status": 400,
+                       "error": "BAD REQUEST",
+                       "message": "O veículo já está na filial indicada.",
+                       "path": "/veiculo/550e8400-e29b-41d4-a716-446655440000/tranferir-filial",
+                       "timestamp": "2026-10-04T12:40:00"
+                     }
+                     """
+               )
+            }
+         )
+      ),
+      @ApiResponse(
+         responseCode = "401",
+         description = "Token inválido",
+         content = @Content
+      ),
+      @ApiResponse(
+         responseCode = "403",
+         description = "Acesso negado ou credenciais ausentes",
+         content = @Content
+      ),
+      @ApiResponse(
+         responseCode = "404",
+         description = "Veículo ou filial não encontrada",
+         content = @Content(
+            mediaType = "application/json",
+            schema = @Schema(implementation = ErrorResponse.class),
+            examples = {
+               @ExampleObject(
+                  name = "Veículo não encontrado",
+                  value = """
+                     {
+                       "status": 404,
+                       "error": "NOT FOUND",
+                       "message": "Veículo não encontrado.",
+                       "path": "/veiculo/550e8400-e29b-41d4-a716-446655440000/tranferir-filial",
+                       "timestamp": "2026-10-04T12:40:00"
+                     }
+                     """
+               ),
+               @ExampleObject(
+                  name = "Filial não encontrada",
+                  value = """
+                     {
+                       "status": 404,
+                       "error": "NOT FOUND",
+                       "message": "Filial não encontrada.",
+                       "path": "/veiculo/550e8400-e29b-41d4-a716-446655440000/tranferir-filial",
+                       "timestamp": "2026-10-04T12:40:00"
+                     }
+                     """
+               )
+            }
+         )
+      )
+   })
+   @PutMapping("/{id}/tranferir-filial")
+   public ResponseEntity<VeiculoResponseDTO> tranferirVeiculoDeFilial(
+      @Parameter(description = "UUID do veículo", example = "550e8400-e29b-41d4-a716-446655440000")
+      @PathVariable("id") String id,
+      @Valid @RequestBody VeiculoTranferenciaFilialDTO dto
+   ) {
+      VeiculoResponseDTO response = service.tranferirVeiculoDeFilial(id, dto);
       return ResponseEntity.status(HttpStatus.OK).body(response);
    }
 

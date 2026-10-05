@@ -3,12 +3,16 @@ package io.github.arthursilvagbs.Locacao.de.Carros.service;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCategoriasDisponiveisResponseDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoCreateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoResponseDTO;
+import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoTranferenciaFilialDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.dto.veiculo.VeiculoUpdateDTO;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.CategoriaVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.FilialLocadora;
+import io.github.arthursilvagbs.Locacao.de.Carros.entity.StatusVeiculo;
 import io.github.arthursilvagbs.Locacao.de.Carros.entity.Veiculo;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.DadosIncompativeisException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.EntidadeNaoEncontradaException;
 import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.RegistroDuplicadoException;
+import io.github.arthursilvagbs.Locacao.de.Carros.exceptions.StatusInvalidoException;
 import io.github.arthursilvagbs.Locacao.de.Carros.mapper.VeiculoMapper;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.FilialLocadoraRepository;
 import io.github.arthursilvagbs.Locacao.de.Carros.repository.VeiculoRepository;
@@ -54,6 +58,33 @@ public class VeiculoServiceTest {
       return new Veiculo(
          "9BWZZZ377VT004251", "ABC1234", "00987654321", "Celta", "Chevrolet",
          2012, "prata", CategoriaVeiculo.HATCH, 10000.00, new FilialLocadora()
+      );
+   }
+
+   private Veiculo criarVeiculo(FilialLocadora filial, StatusVeiculo status) {
+      Veiculo veiculo = new Veiculo(
+         "9BWZZZ377VT004251", "ABC1234", "00987654321", "Celta", "Chevrolet",
+         2012, "prata", CategoriaVeiculo.HATCH, 10000.00, filial
+      );
+      veiculo.setStatusVeiculo(status);
+      return veiculo;
+   }
+
+   private FilialLocadora criarFilial(UUID id) {
+      return new FilialLocadora(
+         id,
+         "Filial Centro",
+         "12345678000199",
+         "SP",
+         "São Paulo",
+         "Rua A, 1",
+         "11999999999",
+         "filial@example.com",
+         null,
+         null,
+         null,
+         null,
+         null
       );
    }
 
@@ -467,6 +498,91 @@ public class VeiculoServiceTest {
          .isInstanceOf(IllegalArgumentException.class);
 
       verifyNoInteractions(repository);
+   }
+
+   // ---------------------------------------------------------------------
+   // MÉTODO: tranferirVeiculoDeFilial
+   // ---------------------------------------------------------------------
+
+   @Test
+   @DisplayName("tranferirVeiculoDeFilial deve mover um veículo disponível para outra filial.")
+   void tranferirVeiculoDeFilial_veiculoDisponivel_atualizaFilial() {
+      UUID veiculoId = UUID.randomUUID();
+      UUID filialDestinoId = UUID.randomUUID();
+      FilialLocadora filialOrigem = criarFilial(UUID.randomUUID());
+      FilialLocadora filialDestino = criarFilial(filialDestinoId);
+      Veiculo veiculo = criarVeiculo(filialOrigem, StatusVeiculo.DISPONIVEL);
+      VeiculoTranferenciaFilialDTO dto = new VeiculoTranferenciaFilialDTO(filialDestinoId.toString());
+      VeiculoResponseDTO responseEsperado = responseDe(veiculo);
+
+      when(repository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+      when(filialLocadoraRepository.findById(filialDestinoId)).thenReturn(Optional.of(filialDestino));
+      when(mapper.mapearParaResponse(veiculo)).thenReturn(responseEsperado);
+
+      VeiculoResponseDTO response = service.tranferirVeiculoDeFilial(veiculoId.toString(), dto);
+
+      assertThat(response).isEqualTo(responseEsperado);
+      assertThat(veiculo.getFilialAtual()).isSameAs(filialDestino);
+      verify(repository).save(veiculo);
+   }
+
+   @Test
+   @DisplayName("tranferirVeiculoDeFilial deve bloquear veículo indisponível.")
+   void tranferirVeiculoDeFilial_veiculoIndisponivel_lancaExcecao() {
+      UUID veiculoId = UUID.randomUUID();
+      UUID filialDestinoId = UUID.randomUUID();
+      Veiculo veiculo = criarVeiculo(criarFilial(UUID.randomUUID()), StatusVeiculo.LOCADO);
+      VeiculoTranferenciaFilialDTO dto = new VeiculoTranferenciaFilialDTO(filialDestinoId.toString());
+
+      when(repository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+      when(filialLocadoraRepository.findById(filialDestinoId)).thenReturn(Optional.of(criarFilial(filialDestinoId)));
+
+      assertThatThrownBy(() -> service.tranferirVeiculoDeFilial(veiculoId.toString(), dto))
+         .isInstanceOf(StatusInvalidoException.class)
+         .hasMessage("O veículo não pode ser transferido por conta de seu status.");
+
+      verify(repository, never()).save(veiculo);
+      verifyNoInteractions(mapper);
+   }
+
+   @Test
+   @DisplayName("tranferirVeiculoDeFilial deve bloquear transferência para a filial atual.")
+   void tranferirVeiculoDeFilial_filialAtual_lancaExcecao() {
+      UUID veiculoId = UUID.randomUUID();
+      UUID filialId = UUID.randomUUID();
+      FilialLocadora filialAtual = criarFilial(filialId);
+      Veiculo veiculo = criarVeiculo(filialAtual, StatusVeiculo.DISPONIVEL);
+      VeiculoTranferenciaFilialDTO dto = new VeiculoTranferenciaFilialDTO(filialId.toString());
+
+      when(repository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+      when(filialLocadoraRepository.findById(filialId))
+         .thenReturn(Optional.of(criarFilial(UUID.fromString(filialId.toString()))));
+
+      assertThatThrownBy(() -> service.tranferirVeiculoDeFilial(veiculoId.toString(), dto))
+         .isInstanceOf(DadosIncompativeisException.class)
+         .hasMessage("O veículo já está na filial indicada.");
+
+      verify(repository, never()).save(veiculo);
+      verifyNoInteractions(mapper);
+   }
+
+   @Test
+   @DisplayName("tranferirVeiculoDeFilial deve lançar exception quando a filial de destino não existe.")
+   void tranferirVeiculoDeFilial_filialDestinoInexistente_lancaExcecao() {
+      UUID veiculoId = UUID.randomUUID();
+      UUID filialDestinoId = UUID.randomUUID();
+      Veiculo veiculo = criarVeiculo(criarFilial(UUID.randomUUID()), StatusVeiculo.DISPONIVEL);
+      VeiculoTranferenciaFilialDTO dto = new VeiculoTranferenciaFilialDTO(filialDestinoId.toString());
+
+      when(repository.findById(veiculoId)).thenReturn(Optional.of(veiculo));
+      when(filialLocadoraRepository.findById(filialDestinoId)).thenReturn(Optional.empty());
+
+      assertThatThrownBy(() -> service.tranferirVeiculoDeFilial(veiculoId.toString(), dto))
+         .isInstanceOf(EntidadeNaoEncontradaException.class)
+         .hasMessage("Filial não encontrada.");
+
+      verify(repository, never()).save(veiculo);
+      verifyNoInteractions(mapper);
    }
 
    // ---------------------------------------------------------------------
