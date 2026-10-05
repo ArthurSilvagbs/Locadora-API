@@ -57,26 +57,34 @@ public class SecurityConfig {
             .requestMatchers("/veiculo/**").hasAnyRole("ADMIN", "GERENTE")
             //VeiculoController
             //PessoaFisicaController
-            .requestMatchers(HttpMethod.POST, "/pessoa-fisica").authenticated()
+            .requestMatchers(HttpMethod.POST, "/pessoa-fisica").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/pessoa-fisica/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/pessoa-fisica/cpf/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers("/pessoa-fisica/**").hasAnyRole("ADMIN", "GERENTE")
             //PessoaFisicaController
             //PessoaJuridicaController
-            .requestMatchers(HttpMethod.POST, "/pessoa-juridica").authenticated()
+            .requestMatchers(HttpMethod.POST, "/pessoa-juridica").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/pessoa-juridica/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers(HttpMethod.GET, "/pessoa-juridica/cnpj/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             .requestMatchers("/pessoa-juridica/**").hasAnyRole("ADMIN", "GERENTE")
             //PessoaJuridicaController
             //FilialLocadoraController
-            .requestMatchers(HttpMethod.GET, "/filial-locadora/*").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.GET, "/filial-locadora/**").permitAll()
             .requestMatchers("/filial-locadora/**").hasAnyRole("ADMIN", "GERENTE")
             //FilialLocadoraController
             //ManutencaoController
-            .requestMatchers("/manutencao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.GET, "/manutencao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.POST, "/manutencao").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.PUT, "/manutencao/*/concluir").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/manutencao/**").hasAnyRole("ADMIN", "GERENTE")
             //ManutencaoController
             //LocacaoController
-            .requestMatchers("/locacao/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/locacao").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO", "CLIENTE")
+            .requestMatchers(HttpMethod.GET, "/locacao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.PUT, "/locacao/retirada/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.PUT, "/locacao/devolucao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers(HttpMethod.PUT, "/locacao/cancelar/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
+            .requestMatchers("/locacao/**").hasAnyRole("ADMIN", "GERENTE", "FUNCIONARIO")
             //LocacaoController
             //Regra Final
             .anyRequest().permitAll()
