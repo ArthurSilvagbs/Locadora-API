@@ -320,17 +320,18 @@ class LocacaoServiceTest {
     }
 
     @Test
-    void confirmarDevolucao_devolveVeiculoERegistraQuilometragemFinal() {
+    void confirmarDevolucao_emOutraFilial_atualizaLocalizacaoDoVeiculo() {
         UUID locacaoId = UUID.randomUUID();
-        FilialLocadora filial = criarFilial();
+        FilialLocadora filialRetirada = criarFilial(UUID.randomUUID());
+        FilialLocadora filialDevolucao = criarFilial(UUID.randomUUID());
         Locacao locacao = criarLocacao(
             new Cliente("Arthur", "arthur@example.com", "11999999999", "Rua A, 1"),
-            filial,
-            filial,
+            filialRetirada,
+            filialDevolucao,
             CategoriaVeiculo.HATCH,
             BigDecimal.valueOf(360.0)
         );
-        Veiculo veiculo = criarVeiculo(filial, CategoriaVeiculo.HATCH, StatusVeiculo.LOCADO);
+        Veiculo veiculo = criarVeiculo(filialRetirada, CategoriaVeiculo.HATCH, StatusVeiculo.LOCADO);
         locacao.setVeiculo(veiculo);
         locacao.setStatusLocacao(StatusLocacao.RETIRADO);
         LocacaoResponseDTO resposta = respostaDe(locacao);
@@ -347,6 +348,7 @@ class LocacaoServiceTest {
         assertThat(resultado).isEqualTo(resposta);
         assertThat(veiculo.getQuilometragem()).isEqualTo(1250.0);
         assertThat(veiculo.getStatusVeiculo()).isEqualTo(StatusVeiculo.DISPONIVEL);
+        assertThat(veiculo.getFilialAtual()).isSameAs(filialDevolucao);
         assertThat(locacao.getKmDevolucao()).isEqualTo(1250.0);
         assertThat(locacao.getStatusLocacao()).isEqualTo(StatusLocacao.DEVOLVIDO);
         verify(veiculoRepository).save(veiculo);

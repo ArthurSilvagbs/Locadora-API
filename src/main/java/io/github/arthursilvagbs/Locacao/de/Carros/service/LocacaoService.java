@@ -120,6 +120,11 @@ public class LocacaoService {
       Veiculo veiculo = locacao.getVeiculo();
       veiculo.setQuilometragem(veiculo.getQuilometragem() + dto.kmPosDevolucao());
       veiculo.setStatusVeiculo(StatusVeiculo.DISPONIVEL);
+
+      if (!locacao.getFilialDevolucao().getIdLocadora().equals(locacao.getFilialRetirada().getIdLocadora())) {
+         veiculo.setFilialAtual(locacao.getFilialDevolucao());
+      }
+
       veiculoRepository.save(veiculo);
 
       locacao.setStatusLocacao(StatusLocacao.DEVOLVIDO);
